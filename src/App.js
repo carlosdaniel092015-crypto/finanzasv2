@@ -1677,10 +1677,16 @@ export default function FinanceTracker() {
                     <input
                       type="number"
                       min="0"
-                      max="100"
-                      value={annualRate * 100}
-                      onChange={(e) => setAnnualRate(parseFloat(e.target.value) / 100 || 0)}
-                      className="w-16 px-2 py-1 text-gray-900 rounded-md text-sm font-bold shadow-sm focus:ring-2 focus:ring-purple-300 outline-none"
+                      max="99.99"
+                      step="0.01"
+                      value={annualRate ? parseFloat((annualRate * 100).toFixed(2)) : ''}
+                      onChange={(e) => {
+                        let val = parseFloat(e.target.value);
+                        if (isNaN(val)) val = 0;
+                        if (val > 99.99) val = 99.99;
+                        setAnnualRate(val / 100);
+                      }}
+                      className="w-20 px-2 py-1 text-gray-900 rounded-md text-sm font-bold shadow-sm focus:ring-2 focus:ring-purple-300 outline-none"
                     />
                     <span className="text-purple-100 text-xs sm:text-sm">% | Interés compuesto diario</span>
                   </div>
