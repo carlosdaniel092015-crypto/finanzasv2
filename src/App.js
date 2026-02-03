@@ -464,7 +464,11 @@ export default function FinanceTracker() {
           user_id: currentUser.id,
           description: reminderName,
           amount: numericAmount,
-          date: reminderDueDate,
+          // Fix: Parse local date to preserve day
+          date: (() => {
+            const [y, m, d] = reminderDueDate.split('-').map(Number);
+            return new Date(y, m - 1, d).toISOString();
+          })(),
           category: reminderCategory,
           frequency: reminderFrequency,
           status: 'pendiente'
@@ -483,7 +487,11 @@ export default function FinanceTracker() {
           category: reminderCategory,
           description: `${reminderName} (Recordatorio)`,
           status: 'pendiente',
-          date: new Date().toISOString(),
+          date: (() => {
+            // Also use the reminder date for the transaction created
+            const [y, m, d] = reminderDueDate.split('-').map(Number);
+            return new Date(y, m - 1, d).toISOString();
+          })(),
           from_reminder: true,
           reminder_id: reminderData.id
         });
@@ -758,7 +766,11 @@ export default function FinanceTracker() {
         user_id: currentUser.id,
         title: savingName,
         amount: numericAmount,
-        date: savingDate
+        // Fix: Parse local date to preserve day
+        date: (() => {
+          const [y, m, d] = savingDate.split('-').map(Number);
+          return new Date(y, m - 1, d).toISOString();
+        })()
       });
 
       if (error) throw error;
