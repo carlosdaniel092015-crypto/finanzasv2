@@ -648,7 +648,9 @@ export default function FinanceTracker() {
     const now = new Date(reminderSelectedDate);
 
     return filtered.filter(r => {
-      const reminderDate = new Date(r.dueDate);
+      // Parse YYYY-MM-DD string to Local Midnight to avoid UTC shift
+      const [y, m, d] = r.dueDate.split('-').map(Number);
+      const reminderDate = new Date(y, m - 1, d);
 
       if (reminderDateFilter === 'dia') {
         return reminderDate.toDateString() === now.toDateString();
@@ -803,7 +805,9 @@ export default function FinanceTracker() {
 
     sortedSavings.forEach((saving) => {
 
-      const savingDate = new Date(saving.date);
+      // Parse YYYY-MM-DD string to Local Midnight
+      const [y, m, d] = saving.date.split('-').map(Number);
+      const savingDate = new Date(y, m - 1, d);
 
       const today = new Date();
 
