@@ -91,7 +91,14 @@ export default function FinanceTracker() {
 
   const BUSINESS_AUTHORIZED_EMAIL = 'acentos.decoventas@gmail.com';
 
-  const ANNUAL_RETURN_RATE = 0.11;
+  const [annualRate, setAnnualRate] = useState(() => {
+    const saved = localStorage.getItem('annualReturnRate');
+    return saved ? parseFloat(saved) : 0.11;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('annualReturnRate', annualRate);
+  }, [annualRate]);
 
 
 
@@ -295,20 +302,17 @@ export default function FinanceTracker() {
       try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const dayOfMonth = today.getDate();
-        if (dayOfMonth !== 1) {
-          isProcessing = false;
-          return;
-        }
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
         for (const reminder of reminders) {
           if (reminder.frequency !== 'mensual') continue;
           const dueDate = new Date(reminder.dueDate);
           dueDate.setHours(0, 0, 0, 0);
+
+          // Si la fecha de vencimiento es hoy o antes
           if (dueDate <= today) {
             try {
-              const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-              const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
               const { data: existingTransactions, error: fetchError } = await supabase
                 .from('transactions')
@@ -331,7 +335,7 @@ export default function FinanceTracker() {
                   category: reminder.category,
                   description: `${reminder.name} (Pago mensual automático)`,
                   status: 'pendiente',
-                  date: today.toISOString(),
+                  date: firstDayOfMonth.toISOString(),
                   from_reminder: true,
                   reminder_id: reminder.id
                 });
@@ -809,7 +813,7 @@ export default function FinanceTracker() {
 
 
 
-      const dailyRate = Math.pow(1 + ANNUAL_RETURN_RATE, 1 / 365) - 1;
+      const dailyRate = Math.pow(1 + annualRate, 1 / 365) - 1;
 
       const amountWithInterest = saving.amount * Math.pow(1 + dailyRate, daysElapsed);
 
@@ -1668,7 +1672,18 @@ export default function FinanceTracker() {
                 <PiggyBank className="w-8 h-8 sm:w-10 sm:h-10" />
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold">Cuenta de Inversión</h2>
-                  <p className="text-purple-100 text-xs sm:text-sm">Retorno anual: 11% | Interés compuesto diario</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-purple-100 text-xs sm:text-sm">Retorno anual:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={annualRate * 100}
+                      onChange={(e) => setAnnualRate(parseFloat(e.target.value) / 100 || 0)}
+                      className="w-16 px-2 py-1 text-gray-900 rounded-md text-sm font-bold shadow-sm focus:ring-2 focus:ring-purple-300 outline-none"
+                    />
+                    <span className="text-purple-100 text-xs sm:text-sm">% | Interés compuesto diario</span>
+                  </div>
                 </div>
               </div>
             </div>
