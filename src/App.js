@@ -1003,7 +1003,9 @@ export default function FinanceTracker() {
   const filterBusinessTransactionsByDate = () => {
     const now = new Date(businessSelectedDate);
     return businessTransactions.filter(t => {
-      const transDate = new Date(t.date);
+      // Parse ISO string (UTC) as Local Date explicitly
+      const [y, m, d] = t.date.split('T')[0].split('-').map(Number);
+      const transDate = new Date(y, m - 1, d);
       if (businessDateFilter === 'dia') {
         return transDate.toDateString() === now.toDateString();
       } else if (businessDateFilter === 'mes') {
@@ -1016,12 +1018,13 @@ export default function FinanceTracker() {
   };
 
   const filterTransactionsByDate = () => {
-
     const now = new Date(selectedDate);
 
     return transactions.filter(t => {
-
-      const transDate = new Date(t.date);
+      // Parse ISO string (UTC) as Local Date explicitly
+      // "2026-02-03T00:00:00Z" -> "2026", "02", "03" -> Local Date Feb 03
+      const [y, m, d] = t.date.split('T')[0].split('-').map(Number);
+      const transDate = new Date(y, m - 1, d);
 
       if (dateFilter === 'dia') {
 
@@ -1652,7 +1655,14 @@ export default function FinanceTracker() {
                           </div>
                           <p className="text-gray-600 text-xs sm:text-sm truncate">{transaction.description || 'Sin descripción'}</p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {new Date(transaction.date).toLocaleDateString('es-ES')}
+                            {(() => {
+                              const [y, m, d] = transaction.date.split('T')[0].split('-').map(Number);
+                              return new Date(y, m - 1, d).toLocaleDateString('es-ES', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              });
+                            })()}
                           </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -1803,11 +1813,14 @@ export default function FinanceTracker() {
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className="font-bold text-sm sm:text-lg text-gray-800 truncate">{saving.name}</span>
                             <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
-                              {new Date(saving.date).toLocaleDateString('es-ES', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
+                              {(() => {
+                                const [y, m, d] = saving.date.split('T')[0].split('-').map(Number);
+                                return new Date(y, m - 1, d).toLocaleDateString('es-ES', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric'
+                                });
+                              })()}
                             </span>
                           </div>
 
@@ -2171,14 +2184,20 @@ export default function FinanceTracker() {
                               <div>
                                 <span className="text-gray-600">Vence:</span>
                                 <span className="font-semibold ml-1 sm:ml-2">
-                                  {new Date(reminder.dueDate).toLocaleDateString('es-ES')}
+                                  {(() => {
+                                    const [y, m, d] = reminder.dueDate.split('T')[0].split('-').map(Number);
+                                    return new Date(y, m - 1, d).toLocaleDateString('es-ES');
+                                  })()}
                                 </span>
                               </div>
                               {reminder.status === 'pagado' && reminder.paidDate && (
                                 <div>
                                   <span className="text-gray-600">Pagado:</span>
                                   <span className="font-semibold ml-1 sm:ml-2 text-green-600">
-                                    {new Date(reminder.paidDate).toLocaleDateString('es-ES')}
+                                    {(() => {
+                                      const [y, m, d] = reminder.paidDate.split('T')[0].split('-').map(Number);
+                                      return new Date(y, m - 1, d).toLocaleDateString('es-ES');
+                                    })()}
                                   </span>
                                 </div>
                               )}
