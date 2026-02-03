@@ -1372,7 +1372,10 @@ export default function FinanceTracker() {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Dashboard</h2>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   <button
-                    onClick={() => setDateFilter('dia')}
+                    onClick={() => {
+                      setDateFilter('dia');
+                      setSelectedDate(new Date());
+                    }}
                     className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition text-xs sm:text-sm flex-1 sm:flex-none ${dateFilter === 'dia' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                   >
@@ -1852,7 +1855,10 @@ export default function FinanceTracker() {
               <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">Filtrar por Fecha</h3>
               <div className="flex flex-wrap gap-2 items-center">
                 <button
-                  onClick={() => setReminderDateFilter('dia')}
+                  onClick={() => {
+                    setReminderDateFilter('dia');
+                    setReminderSelectedDate(new Date());
+                  }}
                   className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition text-xs sm:text-sm ${reminderDateFilter === 'dia' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                 >
@@ -2206,7 +2212,10 @@ export default function FinanceTracker() {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Dashboard Empresarial</h2>
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                   <button
-                    onClick={() => setBusinessDateFilter('dia')}
+                    onClick={() => {
+                      setBusinessDateFilter('dia');
+                      setBusinessSelectedDate(new Date());
+                    }}
                     className={`px-3 sm:px-4 py-2 rounded-lg font-semibold transition text-xs sm:text-sm flex-1 sm:flex-none ${businessDateFilter === 'dia' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                   >
