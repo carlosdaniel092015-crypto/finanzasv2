@@ -172,6 +172,7 @@ export default function FinanceTracker() {
 
     fetchTransactions();
 
+    /* Realtime disabled
     const subscription = supabase
       .channel('public:transactions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUser.id}` }, fetchTransactions)
@@ -180,6 +181,7 @@ export default function FinanceTracker() {
     return () => {
       supabase.removeChannel(subscription);
     };
+    */
   }, [currentUser]);
 
 
@@ -202,6 +204,7 @@ export default function FinanceTracker() {
 
     fetchSavings();
 
+    /* Realtime disabled
     const subscription = supabase
       .channel('public:savings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'savings' }, fetchSavings)
@@ -210,6 +213,7 @@ export default function FinanceTracker() {
     return () => {
       supabase.removeChannel(subscription);
     };
+    */
   }, [currentUser, showSavingsModule]);
 
 
@@ -236,6 +240,7 @@ export default function FinanceTracker() {
 
     fetchReminders();
 
+    /* Realtime disabled
     const subscription = supabase
       .channel('public:reminders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reminders', filter: `user_id=eq.${currentUser.id}` }, fetchReminders)
@@ -244,6 +249,7 @@ export default function FinanceTracker() {
     return () => {
       supabase.removeChannel(subscription);
     };
+    */
   }, [currentUser, showRemindersModule]);
 
 
@@ -265,6 +271,7 @@ export default function FinanceTracker() {
 
     fetchBusinessTransactions();
 
+    /* Realtime disabled
     const subscription = supabase
       .channel('public:business_transactions')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'business_transactions', filter: `user_id=eq.${currentUser.id}` }, fetchBusinessTransactions)
@@ -273,6 +280,7 @@ export default function FinanceTracker() {
     return () => {
       supabase.removeChannel(subscription);
     };
+    */
   }, [currentUser, showBusinessModule]);
 
 
