@@ -1397,8 +1397,12 @@ export default function FinanceTracker() {
                   </button>
                   <input
                     type="date"
-                    value={selectedDate.toISOString().split('T')[0]}
-                    onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                    value={selectedDate.toLocaleDateString('en-CA')}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      const [y, m, d] = e.target.value.split('-').map(Number);
+                      setSelectedDate(new Date(y, m - 1, d));
+                    }}
                     className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
                   />
                 </div>
@@ -1880,8 +1884,12 @@ export default function FinanceTracker() {
                 </button>
                 <input
                   type="date"
-                  value={reminderSelectedDate.toISOString().split('T')[0]}
-                  onChange={(e) => setReminderSelectedDate(new Date(e.target.value))}
+                  value={reminderSelectedDate.toLocaleDateString('en-CA')}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [y, m, d] = e.target.value.split('-').map(Number);
+                    setReminderSelectedDate(new Date(y, m - 1, d));
+                  }}
                   className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm"
                 />
               </div>
@@ -2237,8 +2245,12 @@ export default function FinanceTracker() {
                   </button>
                   <input
                     type="date"
-                    value={businessSelectedDate.toISOString().split('T')[0]}
-                    onChange={(e) => setBusinessSelectedDate(new Date(e.target.value))}
+                    value={businessSelectedDate.toLocaleDateString('en-CA')}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      const [y, m, d] = e.target.value.split('-').map(Number);
+                      setBusinessSelectedDate(new Date(y, m - 1, d));
+                    }}
                     className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm w-full sm:w-auto"
                   />
                 </div>
