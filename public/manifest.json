@@ -1,6 +1,7 @@
 {
     "short_name": "Finanzas",
     "name": "Finanzas Personales - Tracker",
+    "id": "/",
     "icons": [
         {
             "src": "logo192.png",
