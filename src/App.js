@@ -96,7 +96,7 @@ export default function FinanceTracker() {
 
   const BUSINESS_AUTHORIZED_EMAIL = 'acentos.decoventas@gmail.com';
 
-  const VAPID_PUBLIC_KEY = 'BJ498e_n0d0Fp5Y3yWvX6Y8Z1_z9f_J9S_7S1S1S1S1S1S1S1S1S1S1S1S1S1S1S'; // Generar uno real para prod
+  const VAPID_PUBLIC_KEY = 'BKRApo1ItUND05_-VfyO5t4NIZkZQTAVMRrCSqb4fpEJgkdNITq356YwxyhuP2N0u_-lvHOb5tVMlnXvZuTvzZ4';
 
   const [annualRate, setAnnualRate] = useState(() => {
     const saved = localStorage.getItem('annualReturnRate');
