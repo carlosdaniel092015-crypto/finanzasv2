@@ -10,12 +10,8 @@ const CACHE_NAME = 'finanzas-personales-v1';
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll([
-                '/',
-                '/index.html',
-                '/static/js/bundle.js',
-                // Add other assets as needed
-            ]);
+            // Solo cacheamos lo esencial para que no falle la instalación
+            return cache.addAll(['/', '/index.html']).catch(err => console.log('Cache error:', err));
         })
     );
 });
