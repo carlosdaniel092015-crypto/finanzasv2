@@ -88,6 +88,7 @@ export default function FinanceTracker() {
   // Estados para notificaciones
   const [notificationsEnabled, setNotificationsEnabled] = useState('default');
   const [showNotificationConfig, setShowNotificationConfig] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
 
   const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
 
@@ -151,6 +152,12 @@ export default function FinanceTracker() {
       if ('Notification' in window) {
         setNotificationsEnabled(Notification.permission);
       }
+
+      // Capturar evento de instalación PWA
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+      });
       const isBusinessAccount = user.email === BUSINESS_AUTHORIZED_EMAIL;
       setShowSavingsModule(AUTHORIZED_EMAILS.includes(user.email) && !isBusinessAccount);
       setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
@@ -891,6 +898,15 @@ export default function FinanceTracker() {
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
+  };
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
   };
 
   const requestNotificationPermission = async () => {
@@ -1977,6 +1993,15 @@ export default function FinanceTracker() {
                         <li>Luego abre la app desde tu pantalla de inicio</li>
                         <li>Haz clic en el botón de abajo</li>
                       </ul>
+                      {installPrompt && (
+                        <button
+                          onClick={handleInstallClick}
+                          className="w-full mb-3 py-2 bg-orange-700 hover:bg-orange-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                        >
+                          <PlusCircle className="w-4 h-4" />
+                          Descargar como App Nativa
+                        </button>
+                      )}
                       <button
                         onClick={requestNotificationPermission}
                         className={`w-full py-2 rounded-lg text-xs font-bold transition ${notificationsEnabled === 'granted'
