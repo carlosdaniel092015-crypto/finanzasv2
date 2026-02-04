@@ -1,0 +1,162 @@
+{
+    "name": "Finanzas - Notificaciones PWA (Web Push)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "cronExpression",
+                            "expression": "0 8 * * *"
+                        }
+                    ]
+                }
+            },
+            "id": "78787878-7878-4878-8878-787878787878",
+            "name": "Cron Daily 8AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "https://odoo-supabase.jyrqup.easypanel.host/rest/v1/reminders",
+                "authentication": "headerAuth",
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "YOUR_SUPABASE_ANON_KEY"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer YOUR_SUPABASE_ANON_KEY"
+                        }
+                    ]
+                },
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "status",
+                            "value": "eq.pendiente"
+                        }
+                    ]
+                }
+            },
+            "id": "12121212-1212-4212-8212-121212121212",
+            "name": "Fetch Reminders",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const reminders = items[0].json;\nconst today = new Date();\ntoday.setHours(0,0,0,0);\n\nconst tomorrow = new Date(today);\ntomorrow.setDate(today.getDate() + 1);\n\nconst dueSoon = reminders.filter(r => {\n  const [y, m, d] = r.date.split('T')[0].split('-').map(Number);\n  const reminderDate = new Date(y, m - 1, d);\n  return reminderDate <= tomorrow;\n});\n\nif (dueSoon.length === 0) return [];\n\nreturn dueSoon.map(r => ({ json: { \n  title: '¡Pago Pendiente!', \n  body: `${r.description}: $${r.amount} vence pronto.` \n} }));"
+            },
+            "id": "34343434-3434-4434-8434-343434343434",
+            "name": "Filter Due Soon",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "GET",
+                "url": "https://odoo-supabase.jyrqup.easypanel.host/rest/v1/push_subscriptions",
+                "authentication": "headerAuth",
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "YOUR_SUPABASE_ANON_KEY"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer YOUR_SUPABASE_ANON_KEY"
+                        }
+                    ]
+                }
+            },
+            "id": "subscription-fetch",
+            "name": "Fetch Subscriptions",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                1050,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Este nodo requiere la libreria 'web-push' en n8n\n// Si no la tienes, puedes usar un servicio como Pushcut o SimplePush\n// configurado aqui abajo.\n\nreturn items.map(item => {\n  return {\n    json: {\n      ...item.json,\n      info: \"Configura tu servicio de push aqui o usa OneSignal/Pushcut\"\n    }\n  };\n});"
+            },
+            "id": "push-sender",
+            "name": "Send Push Logic",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Cron Daily 8AM": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Reminders",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Reminders": {
+            "main": [
+                [
+                    {
+                        "node": "Filter Due Soon",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filter Due Soon": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Subscriptions",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Subscriptions": {
+            "main": [
+                [
+                    {
+                        "node": "Send Push Logic",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {},
+    "id": "web_push_notification_workflow"
+}

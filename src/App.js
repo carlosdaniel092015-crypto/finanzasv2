@@ -85,11 +85,17 @@ export default function FinanceTracker() {
   const [businessDateFilter, setBusinessDateFilter] = useState('mes');
   const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
 
+  // Estados para notificaciones
+  const [notificationsEnabled, setNotificationsEnabled] = useState('default');
+  const [showNotificationConfig, setShowNotificationConfig] = useState(false);
+
   const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
 
   const REMINDERS_AUTHORIZED_EMAIL = 'carlosdaniel092015@gmail.com';
 
   const BUSINESS_AUTHORIZED_EMAIL = 'acentos.decoventas@gmail.com';
+
+  const VAPID_PUBLIC_KEY = 'BJ498e_n0d0Fp5Y3yWvX6Y8Z1_z9f_J9S_7S1S1S1S1S1S1S1S1S1S1S1S1S1S1S'; // Generar uno real para prod
 
   const [annualRate, setAnnualRate] = useState(() => {
     const saved = localStorage.getItem('annualReturnRate');
@@ -140,6 +146,11 @@ export default function FinanceTracker() {
     if (user) {
       setCurrentUser(user);
       setShowLogin(false);
+
+      // Verificar estado de notificaciones
+      if ('Notification' in window) {
+        setNotificationsEnabled(Notification.permission);
+      }
       const isBusinessAccount = user.email === BUSINESS_AUTHORIZED_EMAIL;
       setShowSavingsModule(AUTHORIZED_EMAILS.includes(user.email) && !isBusinessAccount);
       setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
@@ -868,6 +879,60 @@ export default function FinanceTracker() {
   };
 
 
+
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      alert('Tu navegador no soporta notificaciones o service workers');
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationsEnabled(permission);
+
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+
+        // Suscribirse al servicio de Push
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
+
+        // Guardar en Supabase
+        const { error } = await supabase
+          .from('push_subscriptions')
+          .upsert({
+            user_id: currentUser.id,
+            subscription: subscription,
+            device_info: navigator.userAgent
+          }, { onConflict: 'user_id' });
+
+        if (error) {
+          console.error('Error guardando suscripción:', error);
+          alert('Permiso otorgado pero error al vincular el equipo. Asegúrate de que la tabla push_subscriptions existe.');
+        } else {
+          alert('¡Equipo vinculado con éxito para notificaciones nativas!');
+        }
+      }
+    } catch (error) {
+      console.error('Error en notificaciones:', error);
+      alert('Error al activar notificaciones: ' + error.message);
+    }
+  };
 
   const formatCurrency = (value) => {
 
@@ -1872,15 +1937,65 @@ export default function FinanceTracker() {
           <>
             {/* Módulo de Recordatorios */}
             <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold">Recordatorios de Pagos</h2>
-                  <p className="text-orange-100 text-xs sm:text-sm">Préstamos, Tarjetas y Servicios</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold">Recordatorios de Pagos</h2>
+                    <p className="text-orange-100 text-xs sm:text-sm">Préstamos, Tarjetas y Servicios</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => setShowNotificationConfig(!showNotificationConfig)}
+                  className="bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg transition flex items-center gap-2 text-sm font-semibold"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Configurar Notificaciones
+                </button>
               </div>
+
+              {showNotificationConfig && (
+                <div className="mt-6 bg-white/10 rounded-xl p-4 border border-white/20 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <h3 className="font-bold mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Ajustes de Alertas
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white/10 p-3 rounded-lg border border-white/10">
+                      <p className="text-sm font-semibold mb-2">📲 1. Notificaciones en el Celular (Estado)</p>
+                      <p className="text-xs text-orange-50 mb-3 opacity-90">Para recibir alertas como Gmail:</p>
+                      <ul className="text-[10px] space-y-1 list-disc list-inside mb-3 opacity-80">
+                        <li>En iPhone: <b>Compartir &rarr; Agregar a Inicio</b></li>
+                        <li>En Android: <b>Instalar App</b></li>
+                        <li>Luego abre la app desde tu pantalla de inicio</li>
+                        <li>Haz clic en el botón de abajo</li>
+                      </ul>
+                      <button
+                        onClick={requestNotificationPermission}
+                        className={`w-full py-2 rounded-lg text-xs font-bold transition ${notificationsEnabled === 'granted'
+                          ? 'bg-green-500/50 cursor-default'
+                          : 'bg-white text-orange-600 hover:bg-orange-50'
+                          }`}
+                      >
+                        {notificationsEnabled === 'granted' ? '✅ ID de Celular Vinculado' : '🔗 Vincular este Celular'}
+                      </button>
+                    </div>
+                    <div className="bg-white/10 p-3 rounded-lg border border-white/10 flex flex-col justify-center">
+                      <p className="text-sm font-semibold mb-2">ℹ️ Importante</p>
+                      <p className="text-xs text-orange-50 opacity-90">
+                        Las notificaciones llegarán a la barra superior de tu teléfono incluso si la aplicación está cerrada.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Filtros de fecha para recordatorios */}
