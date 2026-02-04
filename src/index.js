@@ -9,15 +9,17 @@ root.render(
   </React.StrictMode>
 );
 
-// Registrar el Service Worker
+// Registrar el Service Worker con logs de diagnóstico
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
-        console.log('SW registrado con éxito: ', registration.scope);
+        console.log('✅ SW registrado con éxito en el ámbito:', registration.scope);
       })
       .catch(error => {
-        console.log('Fallo el registro del SW: ', error);
+        console.error('❌ Falló el registro del SW:', error);
       });
   });
+} else {
+  console.warn('⚠️ Service Workers no son compatibles con este navegador.');
 }
