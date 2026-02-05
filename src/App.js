@@ -738,6 +738,8 @@ export default function FinanceTracker() {
 
       const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) throw error;
+      await fetchTransactions();
+      await fetchReminders();
     } catch (error) {
       console.error('Error al eliminar transacción:', error);
       alert('Error al eliminar la transacción');
@@ -823,6 +825,7 @@ export default function FinanceTracker() {
     try {
       const { error } = await supabase.from('savings').delete().eq('id', id);
       if (error) throw error;
+      await fetchSavings();
     } catch (error) {
       console.error('Error al eliminar ahorro:', error);
       alert('Error al eliminar el ahorro');
@@ -1055,6 +1058,7 @@ export default function FinanceTracker() {
     try {
       const { error } = await supabase.from('business_transactions').delete().eq('id', id);
       if (error) throw error;
+      await fetchBusinessTransactions();
     } catch (error) {
       console.error('Error al eliminar transacción:', error);
       alert('Error al eliminar la transacción');
@@ -1445,7 +1449,7 @@ export default function FinanceTracker() {
         {/* Top Scrollable Tabs (Optional for extra filtering like in screenshot) */}
         {activeTab === 'finanzas' && (
           <div className="max-w-md mx-auto mt-4 flex gap-6 text-sm font-medium border-b border-dark-border overflow-x-auto no-scrollbar">
-            {['daily', 'calendar', 'weekly', 'monthly', 'summary'].map((mode) => (
+            {['daily', 'weekly', 'monthly', 'summary'].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
@@ -1619,13 +1623,13 @@ export default function FinanceTracker() {
                   )}
                 </div>
               </>
-            ) : viewMode === 'weekly' || viewMode === 'monthly' || viewMode === 'calendar' ? (
+            ) : viewMode === 'weekly' || viewMode === 'monthly' ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
                     <Layout className="w-4 h-4 text-primary" />
                     <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">
-                      {viewMode === 'weekly' ? 'Vista Semanal' : viewMode === 'monthly' ? 'Vista Mensual' : 'Calendario'}
+                      {viewMode === 'weekly' ? 'Vista Semanal' : 'Vista Mensual'}
                     </h3>
                   </div>
                 </div>
