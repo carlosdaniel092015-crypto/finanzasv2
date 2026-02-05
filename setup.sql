@@ -16,3 +16,6 @@ CREATE POLICY "Users can manage their own subscriptions"
 ON push_subscriptions 
 FOR ALL 
 USING (auth.uid() = user_id);
+
+-- Para habilitar las notificaciones diarias sugeridas:
+-- ALTER TABLE reminders ADD COLUMN IF NOT EXISTS last_notified_at DATE;

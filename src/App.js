@@ -258,8 +258,9 @@ export default function FinanceTracker() {
 
       if (error) console.error('Error fetching reminders:', error);
       else {
-        // Map database fields to application fields if they differ
-        setReminders(data.map(r => ({ ...r, dueDate: r.date, name: r.description })));
+        const mapped = data.map(r => ({ ...r, dueDate: r.date, name: r.description }));
+        setReminders(mapped);
+        checkRemindersAndNotify(mapped);
       }
     };
 
@@ -616,17 +617,40 @@ export default function FinanceTracker() {
 
 
   const getDaysUntilDue = (dueDate) => {
-
     const today = new Date();
-
-    const due = new Date(dueDate);
-
+    today.setHours(0, 0, 0, 0);
+    const [y, m, d] = dueDate.split('-').map(Number);
+    const due = new Date(y, m - 1, d);
     const diffTime = due - today;
-
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
     return diffDays;
+  };
 
+  const checkRemindersAndNotify = async (remindersList) => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+
+    for (const reminder of remindersList) {
+      if (reminder.status !== 'pendiente') continue;
+
+      const daysUntil = getDaysUntilDue(reminder.dueDate);
+
+      // Notificar una semana antes (daysUntil <= 7) 
+      // y seguir notificando diariamente (si last_notified_at !== today)
+      if (daysUntil <= 7 && reminder.last_notified_at !== todayStr) {
+        new Notification('¡Recordatorio de Pago!', {
+          body: `${reminder.description}: $${formatCurrency(reminder.amount)} vence en ${daysUntil} días.`,
+          icon: '/logo192.png'
+        });
+
+        // Actualizar last_notified_at en Supabase
+        await supabase
+          .from('reminders')
+          .update({ last_notified_at: todayStr })
+          .eq('id', reminder.id);
+      }
+    }
   };
 
 
