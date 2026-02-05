@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 -- Enable RLS
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can only manage their own subscriptions
+-- Drop existing policy if exists and recreate
+DROP POLICY IF EXISTS "Users can manage their own subscriptions" ON push_subscriptions;
 CREATE POLICY "Users can manage their own subscriptions" 
 ON push_subscriptions 
 FOR ALL 
@@ -27,6 +28,11 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Add receipt_images column to transactions table
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS receipt_images TEXT[];
+
+-- Drop existing storage policies if they exist
+DROP POLICY IF EXISTS "Users can upload their own receipts" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view their own receipts" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own receipts" ON storage.objects;
 
 -- Storage policies for receipts bucket
 CREATE POLICY "Users can upload their own receipts"
@@ -49,3 +55,4 @@ USING (
   bucket_id = 'receipts' AND
   (storage.foldername(name))[1] = auth.uid()::text
 );
+
