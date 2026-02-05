@@ -12,8 +12,44 @@
   <link rel="apple-touch-icon" href="/logo192.png">
   <link rel="icon" href="/logo192.png">
   <meta name="description" content="Gestor de Finanzas Personales - Organiza tus ingresos y gastos" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>Gestor de Finanzas Personales</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              DEFAULT: '#121212',
+              card: '#1c1c1e',
+              border: '#2c2c2e',
+              text: '#f2f2f7'
+            },
+            primary: '#0A84FF',
+            expense: '#FF453A',
+            income: '#32D74B'
+          },
+          fontFamily: {
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0px;
+    }
+  </style>
 </head>
 
 <body>
