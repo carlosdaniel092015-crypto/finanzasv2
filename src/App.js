@@ -2312,9 +2312,8 @@ export default function FinanceTracker() {
                     </div>
                   </div>
                 </div>
-              ) : null}
+            ) : null}
               </div>
-
                 {/* Notification Center Modal */ }
             {
               showNotificationConfig && (
@@ -2714,5 +2713,6 @@ export default function FinanceTracker() {
               )
             }
           </div>
-      );
+    </div>
+  );
 }
