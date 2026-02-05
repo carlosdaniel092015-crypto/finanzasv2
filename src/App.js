@@ -527,6 +527,8 @@ export default function FinanceTracker() {
 
       if (transactionError) throw transactionError;
 
+      await fetchReminders();
+      await fetchTransactions();
       alert(newStatus === 'pagado' ? 'Marcado como pagado' : 'Marcado como pendiente');
     } catch (error) {
       console.error('Error al actualizar estado:', error);
@@ -1070,6 +1072,7 @@ export default function FinanceTracker() {
         .eq('id', id);
 
       if (error) throw error;
+      await fetchBusinessTransactions();
     } catch (error) {
       console.error('Error al actualizar estado:', error);
       alert('Error al actualizar el estado');
@@ -1583,6 +1586,63 @@ export default function FinanceTracker() {
                   )}
                 </div>
               </>
+            ) : viewMode === 'weekly' || viewMode === 'monthly' || viewMode === 'calendar' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center gap-2">
+                    <Layout className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">
+                      {viewMode === 'weekly' ? 'Vista Semanal' : viewMode === 'monthly' ? 'Vista Mensual' : 'Calendario'}
+                    </h3>
+                  </div>
+                </div>
+
+                {filteredTransactions.length === 0 ? (
+                  <div className="bg-dark-card/30 rounded-3xl p-16 text-center border-2 border-dashed border-dark-border">
+                    <Search className="w-6 h-6 text-gray-700 mx-auto mb-4" />
+                    <h4 className="text-white font-bold mb-1">Sin movimientos</h4>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-widest">En este periodo</p>
+                  </div>
+                ) : (
+                  filteredTransactions.map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="bg-dark-card border border-dark-border rounded-3xl p-4 flex items-center justify-between group active:scale-[0.98] transition-all hover:bg-dark-border/20 shadow-xl"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${transaction.type === 'ingreso' ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'
+                          }`}>
+                          {transaction.type === 'ingreso' ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-bold text-white tracking-tight">{transaction.category}</p>
+                            <span className="text-[8px] text-gray-500 font-bold uppercase">{new Date(transaction.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                          </div>
+                          <p className="text-[10px] text-gray-500 font-medium truncate max-w-[150px]">
+                            {transaction.description || 'Sin detalles'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-base font-black font-mono tracking-tighter ${transaction.type === 'ingreso' ? 'text-income' : 'text-expense'
+                          }`}>
+                          {transaction.type === 'ingreso' ? '+' : '-'}${formatCurrency(transaction.amount)}
+                        </p>
+                        <div className="flex items-center justify-end gap-3 mt-1">
+                          <button
+                            onClick={() => toggleStatus(transaction.id, transaction.status, transaction)}
+                            className={`text-[8px] font-bold uppercase tracking-widest transition-colors ${transaction.status === 'pagado' ? 'text-income' : 'text-yellow-500 underline underline-offset-4'
+                              }`}
+                          >
+                            {transaction.status}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             ) : viewMode === 'summary' ? (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {/* Stats Header */}
@@ -1635,14 +1695,19 @@ export default function FinanceTracker() {
                   </div>
                 </div>
 
-                {/* Bar Chart - Daily Trend */}
                 <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Tendencia diaria (Gastos)</p>
                   {(() => {
                     const daysInMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
                     const dailyData = Array(daysInMonth).fill(0).map((_, i) => ({ day: i + 1, total: 0 }));
 
-                    filteredTransactions.filter(t => t.type === 'gasto').forEach(t => {
+                    // Use ALL transactions for the month for the chart
+                    transactions.filter(t => {
+                      const tDate = new Date(t.date);
+                      return t.type === 'gasto' &&
+                        tDate.getMonth() === selectedDate.getMonth() &&
+                        tDate.getFullYear() === selectedDate.getFullYear();
+                    }).forEach(t => {
                       const day = new Date(t.date).getDate();
                       if (dailyData[day - 1]) dailyData[day - 1].total += t.amount;
                     });
@@ -1661,8 +1726,16 @@ export default function FinanceTracker() {
                         }}
                         options={{
                           scales: {
-                            x: { display: false },
-                            y: { display: false }
+                            x: {
+                              display: true,
+                              grid: { display: false },
+                              ticks: { color: '#4b5563', font: { size: 8 } }
+                            },
+                            y: {
+                              display: true,
+                              grid: { color: 'rgba(255,255,255,0.05)' },
+                              ticks: { color: '#4b5563', font: { size: 8 } }
+                            }
                           },
                           plugins: { legend: { display: false } }
                         }}
@@ -2154,10 +2227,17 @@ export default function FinanceTracker() {
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
                     <div className="flex items-center gap-4 mt-2">
                       <input
-                        type="number"
-                        step="0.01"
-                        value={annualRate * 100}
-                        onChange={(e) => setAnnualRate(Number(e.target.value) / 100)}
+                        type="text"
+                        value={annualRate === 0 ? "" : (annualRate * 100).toString()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "") {
+                            setAnnualRate(0);
+                          } else {
+                            const parsed = parseFloat(val);
+                            if (!isNaN(parsed)) setAnnualRate(parsed / 100);
+                          }
+                        }}
                         className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
                       />
                       <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
