@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2, Lock, Mail } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
@@ -1322,221 +1322,137 @@ export default function FinanceTracker() {
 
 
   if (showLogin) {
-
     return (
+      <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Background Ambient Effects */}
+        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-income/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-
-        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md">
-
-          <div className="text-center mb-6 sm:mb-8">
-
-            <DollarSign className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-blue-600 mb-4" />
-
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Finanzas Personales</h1>
-
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">Organiza tus ingresos y gastos</p>
-
+        <div className="w-full max-w-md bg-dark-card/50 backdrop-blur-xl border border-dark-border/50 rounded-[40px] p-8 sm:p-10 shadow-2xl relative z-10 animate-in fade-in zoom-in duration-500">
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-primary to-blue-600 rounded-3xl flex items-center justify-center shadow-lg shadow-primary/30 mb-6 rotate-3">
+              <DollarSign className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-black text-white mb-2 tracking-tight">
+              Bienvenido a <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-income">Finanzas Pro</span>
+            </h1>
+            <p className="text-gray-400 text-sm font-medium">Gestiona tu imperio financiero</p>
           </div>
 
-
-
           {!isRegistering ? (
-
-            <div className="space-y-4">
-
-              <div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-
-                <input
-
-                  type="email"
-
-                  value={loginForm.email}
-
-                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-
-                  placeholder="tu@email.com"
-
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
-
-                <input
-
-                  type="password"
-
-                  value={loginForm.password}
-
-                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-
-                  placeholder="••••••••"
-
-                />
-
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="email"
+                    value={loginForm.email}
+                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                    className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                    className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                    placeholder="••••••••"
+                  />
+                </div>
               </div>
 
               {loginError && (
-
-                <p className="text-red-500 text-sm text-center">{loginError}</p>
-
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-xs font-bold text-center">
+                  {loginError}
+                </div>
               )}
 
-              <button
-
-                onClick={handleLogin}
-
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
-
-              >
-
-                Iniciar Sesión
-
-              </button>
-
-              <button
-
-                onClick={() => {
-
-                  setIsRegistering(true);
-
-                  setLoginError('');
-
-                }}
-
-                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition text-sm sm:text-base"
-
-              >
-
-                Crear Cuenta
-
-              </button>
-
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleLogin}
+                  className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest shadow-lg shadow-primary/25 active:scale-[0.98] transition-all"
+                >
+                  Iniciar Sesión
+                </button>
+                <button
+                  onClick={() => { setIsRegistering(true); setLoginError(''); }}
+                  className="w-full bg-transparent hover:bg-white/5 text-gray-400 hover:text-white rounded-2xl py-3 text-sm font-bold transition-all"
+                >
+                  Crear Cuenta Nueva
+                </button>
+              </div>
             </div>
-
           ) : (
-
-            <div className="space-y-4">
-
-              <div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-
-                <input
-
-                  type="email"
-
-                  value={registerForm.email}
-
-                  onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-
-                  placeholder="tu@email.com"
-
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña (mínimo 6 caracteres)</label>
-
-                <input
-
-                  type="password"
-
-                  value={registerForm.password}
-
-                  onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-
-                  placeholder="••••••••"
-
-                />
-
-              </div>
-
-              <div>
-
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña</label>
-
-                <input
-
-                  type="password"
-
-                  value={registerForm.confirmPassword}
-
-                  onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-
-                  placeholder="••••••••"
-
-                />
-
+            <div className="space-y-6 animate-in slide-in-from-right duration-300">
+              <div className="space-y-4">
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-income transition-colors" />
+                  <input
+                    type="email"
+                    value={registerForm.email}
+                    onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                    className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:border-income focus:ring-1 focus:ring-income outline-none transition-all"
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-income transition-colors" />
+                  <input
+                    type="password"
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                    className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:border-income focus:ring-1 focus:ring-income outline-none transition-all"
+                    placeholder="Contraseña (mín 6 caracteres)"
+                  />
+                </div>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-income transition-colors" />
+                  <input
+                    type="password"
+                    value={registerForm.confirmPassword}
+                    onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                    className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:border-income focus:ring-1 focus:ring-income outline-none transition-all"
+                    placeholder="Confirmar contraseña"
+                  />
+                </div>
               </div>
 
               {loginError && (
-
-                <p className="text-red-500 text-sm text-center">{loginError}</p>
-
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-xs font-bold text-center">
+                  {loginError}
+                </div>
               )}
 
-              <button
-
-                onClick={handleRegister}
-
-                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition text-sm sm:text-base"
-
-              >
-
-                Registrarse
-
-              </button>
-
-              <button
-
-                onClick={() => {
-
-                  setIsRegistering(false);
-
-                  setLoginError('');
-
-                }}
-
-                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition text-sm sm:text-base"
-
-              >
-
-                Volver al Login
-
-              </button>
-
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={handleRegister}
+                  className="w-full bg-income hover:bg-green-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest shadow-lg shadow-income/25 active:scale-[0.98] transition-all"
+                >
+                  Registrarme
+                </button>
+                <button
+                  onClick={() => { setIsRegistering(false); setLoginError(''); }}
+                  className="w-full bg-transparent hover:bg-white/5 text-gray-400 hover:text-white rounded-2xl py-3 text-sm font-bold transition-all"
+                >
+                  Ya tengo cuenta
+                </button>
+              </div>
             </div>
-
           )}
-
         </div>
 
+        {/* Footer Credit */}
+        <p className="absolute bottom-6 text-gray-600 text-xs font-medium uppercase tracking-widest opacity-50">
+          Finanzas Personales v2.0
+        </p>
       </div>
-
     );
-
   }
 
 
