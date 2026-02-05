@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
@@ -2014,7 +2014,7 @@ export default function FinanceTracker() {
                     </div>
                   ) : (
                     filteredBusinessTransactions.map((t) => (
-                      <div key={t.id} className="bg-dark-card border border-dark-border rounded-3xl p-4 flex items-center justify-between group">
+                      <div key={t.id} className={`bg-dark-card border rounded-3xl p-4 flex items-center justify-between group transition-all ${t.status === 'pendiente' ? 'border-yellow-500/30' : 'border-dark-border'}`}>
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'ingreso' ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}`}>
                             {t.type === 'ingreso' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
@@ -2022,15 +2022,29 @@ export default function FinanceTracker() {
                           <div>
                             <p className="text-sm font-bold text-white leading-none mb-1">{t.category}</p>
                             <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">{t.description || 'Venta general'}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className={`text-[8px] uppercase font-black px-1.5 py-0.5 rounded ${t.status === 'pagado' ? 'bg-income/20 text-income' : 'bg-yellow-500/20 text-yellow-500'}`}>
+                                {t.status}
+                              </p>
+                              {t.client && <p className="text-[8px] text-gray-600 font-bold uppercase">{t.client}</p>}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className={`text-base font-black ${t.type === 'ingreso' ? 'text-income' : 'text-expense'}`}>
                             {t.type === 'ingreso' ? '+' : '-'}${formatCurrency(t.amount)}
                           </p>
-                          <button onClick={() => deleteBusinessTransaction(t.id, t)} className="text-gray-700 hover:text-expense transition mt-1">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          <div className="flex justify-end gap-2 mt-2">
+                            <button
+                              onClick={() => toggleBusinessStatus(t.id, t.status)}
+                              className={`p-1.5 rounded-lg transition-colors ${t.status === 'pendiente' ? 'text-yellow-500 hover:bg-yellow-500/10' : 'text-income hover:bg-income/10'}`}
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => deleteBusinessTransaction(t.id, t)} className="p-1.5 text-gray-700 hover:text-expense hover:bg-expense/10 rounded-lg transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -2088,155 +2102,249 @@ export default function FinanceTracker() {
 
       {/* Premium Add Modal with OCR */}
       {
+
         showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-dark-card w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 border-t border-dark-border shadow-2xl animate-in slide-in-from-bottom-full duration-500 overflow-y-auto max-h-[90vh]">
               <div className="flex justify-between items-center mb-8">
-                <h3 className="text-2xl font-black text-white">Nuevo Registro</h3>
+                <h3 className="text-2xl font-black text-white">
+                  {activeTab === 'finanzas' ? 'Nuevo Registro' :
+                    activeTab === 'ahorros' ? 'Nueva Inversión' :
+                      activeTab === 'recordatorios' ? 'Nuevo Recordatorio' : 'Operación Comercial'}
+                </h3>
                 <button onClick={() => setShowAddModal(false)} className="p-2 text-gray-500 hover:text-white"><PlusCircle className="w-6 h-6 rotate-45" /></button>
               </div>
 
-              {/* OCR Fast Action */}
-              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                    <Camera className="w-6 h-6 text-white" />
+              {/* FINANZAS FORM (Default) */}
+              {activeTab === 'finanzas' && (
+                <>
+                  {/* OCR Fast Action */}
+                  <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                        <Camera className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Carga Inteligente</p>
+                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
+                      </div>
+                    </div>
+                    <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
+                      Subir
+                      <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
+                    </label>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">Carga Inteligente</p>
-                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
-                  </div>
-                </div>
-                <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
-                  Subir
-                  <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
-                </label>
-              </div>
 
-              {/* Uploaded Images Preview */}
-              {uploadedImages.length > 0 && (
-                <div className="mb-6 space-y-3">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {uploadedImages.map((img, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
-                          {img.file.type.startsWith('image/') ? (
-                            <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <FileText className="w-8 h-8 text-primary" />
+                  {/* Uploaded Images Preview */}
+                  {uploadedImages.length > 0 && (
+                    <div className="mb-6 space-y-3">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {uploadedImages.map((img, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
+                              {img.file.type.startsWith('image/') ? (
+                                <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <FileText className="w-8 h-8 text-primary" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        {/* Action Buttons */}
-                        <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => removeImage(index)}
-                            className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(img.preview);
-                              alert('Link copiado');
-                            }}
-                            className="bg-dark-card/90 backdrop-blur-sm text-gray-400 p-1.5 rounded-lg hover:text-white transition-all"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            className="bg-dark-card/90 backdrop-blur-sm text-gray-400 p-1.5 rounded-lg hover:text-primary transition-all"
-                          >
-                            <Bookmark className="w-3.5 h-3.5" />
-                          </button>
+                            <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => removeImage(index)} className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all">
+                                <Trash2 className="w-3 h-3" /> Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-6">
+                    <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                      <button onClick={() => setTransactionType('gasto')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                      <button onClick={() => setTransactionType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Ingreso</button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
+                        <div className="relative group">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
                         </div>
                       </div>
-                    ))}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="">Seleccionar</option>
+                            {categories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                          <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pagado">Pagado</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
+                        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="¿En qué gastaste?" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                    </div>
+
+                    <button onClick={() => { addTransaction(); setShowAddModal(false); }} disabled={isOCRProcessing} className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                      {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
+                    </button>
                   </div>
+                </>
+              )}
+
+              {/* AHORROS FORM */}
+              {activeTab === 'ahorros' && (
+                <div className="space-y-6">
+                  <div className="bg-dark/40 p-4 rounded-2xl border border-dark-border mb-4">
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
+                    <div className="flex items-center gap-4 mt-2">
+                      <input
+                        type="number"
+                        value={(annualRate * 100).toFixed(1)}
+                        onChange={(e) => setAnnualRate(parseFloat(e.target.value) / 100)}
+                        className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
+                      />
+                      <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Invertir</label>
+                      <div className="relative group">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                        <input type="number" value={savingAmount} onChange={(e) => setSavingAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre de la Inversión</label>
+                      <input type="text" value={savingName} onChange={(e) => setSavingName(e.target.value)} placeholder="Ej. Depósito a Plazo, Acciones..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Inicio</label>
+                      <input type="date" value={savingDate} onChange={(e) => setSavingDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
+                    </div>
+                  </div>
+
+                  <button onClick={() => { addSaving(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                    Guardar Inversión
+                  </button>
                 </div>
               )}
 
-              <div className="space-y-6">
-                <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
-                  <button
-                    onClick={() => setTransactionType('gasto')}
-                    className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}
-                  >
-                    Gasto
-                  </button>
-                  <button
-                    onClick={() => setTransactionType('ingreso')}
-                    className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}
-                  >
-                    Ingreso
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
-                    <div className="relative group">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+              {/* RECORDATORIOS FORM */}
+              {activeTab === 'recordatorios' && (
+                <div className="space-y-6">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="">Seleccionar</option>
-                        {categories[transactionType].map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
+                      <div className="relative group">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                        <input type="number" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
-                      <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="pendiente">Pendiente</option>
-                        <option value="pagado">Pagado</option>
-                      </select>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre del Servicio/Pago</label>
+                      <input type="text" value={reminderName} onChange={(e) => setReminderName(e.target.value)} placeholder="Ej. Tarjeta de Crédito, Luz..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                        <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                          <option value="">Seleccionar</option>
+                          {reminderCategories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Frecuencia</label>
+                        <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                          <option value="unica">Única vez</option>
+                          <option value="mensual">Mensual</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Vencimiento</label>
+                      <input type="date" value={reminderDueDate} onChange={(e) => setReminderDueDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
-                    <input
-                      type="text"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="¿En qué gastaste?"
-                      className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700"
-                    />
-                  </div>
+                  <button onClick={() => { addReminder(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                    Crear Recordatorio
+                  </button>
                 </div>
+              )}
 
-                <button
-                  onClick={() => { addTransaction(); setShowAddModal(false); }}
-                  disabled={isOCRProcessing}
-                  className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4"
-                >
-                  {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
-                </button>
-              </div>
+              {/* EMPRESA FORM */}
+              {activeTab === 'empresa' && (
+                <div className="space-y-6">
+                  <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                    <button onClick={() => setBusinessType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Venta</button>
+                    <button onClick={() => setBusinessType('egreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'egreso' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
+                      <div className="relative group">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                        <input type="number" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                        <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                          <option value="">Seleccionar</option>
+                          {businessCategories[businessType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                        <select value={businessStatus} onChange={(e) => setBusinessStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                          <option value="pendiente">Pendiente</option>
+                          <option value="pagado">Pagado</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Cliente / Proveedor</label>
+                      <input type="text" value={businessClient} onChange={(e) => setBusinessClient(e.target.value)} placeholder="Nombre del cliente o proveedor" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Número de Factura (Opcional)</label>
+                      <input type="text" value={businessInvoice} onChange={(e) => setBusinessInvoice(e.target.value)} placeholder="#000000" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Detalles</label>
+                      <input type="text" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)} placeholder="Descripción de la operación" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    </div>
+                  </div>
+
+                  <button onClick={() => { addBusinessTransaction(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                    Registrar Operación
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )
