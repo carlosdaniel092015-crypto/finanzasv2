@@ -19,7 +19,7 @@ FOR ALL
 USING (auth.uid() = user_id);
 
 -- Para habilitar las notificaciones diarias sugeridas:
--- ALTER TABLE reminders ADD COLUMN IF NOT EXISTS last_notified_at DATE;
+ALTER TABLE reminders ADD COLUMN IF NOT EXISTS last_notified_at DATE;
 
 -- Create storage bucket for receipts
 INSERT INTO storage.buckets (id, name, public)
