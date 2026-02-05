@@ -4,6 +4,9 @@ import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
 import { Pie, Bar, Line } from 'react-chartjs-2';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 
 ChartJS.register(
   ArcElement, Tooltip, Legend,
@@ -966,9 +969,123 @@ export default function FinanceTracker() {
   };
 
   const formatCurrency = (value) => {
+    return "RD$ " + (value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const generatePDFReport = async () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
+    // Title
+    doc.setFontSize(22);
+    doc.setTextColor(59, 130, 246); // Primary color
+    doc.text('Finanzas Pro - Reporte Mensual', pageWidth / 2, 20, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generado el: ${dateStr}`, pageWidth / 2, 28, { align: 'center' });
+
+    // Summary Section
+    doc.setFontSize(16);
+    doc.setTextColor(0);
+    doc.text('Resumen General', 14, 45);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['Concepto', 'Monto']],
+      body: [
+        ['Ingresos Totales', formatCurrency(totalIngresos)],
+        ['Gastos Totales', formatCurrency(totalGastos)],
+        ['Balance Neto', formatCurrency(balance)],
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+
+    // Transactions Table
+    doc.text('Historial de Transacciones', 14, doc.lastAutoTable.finalY + 15);
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 20,
+      head: [['Fecha', 'Categoría', 'Descripción', 'Tipo', 'Estado', 'Monto']],
+      body: filteredTransactions.map(t => [
+        new Date(t.date).toLocaleDateString(),
+        t.category,
+        t.description || '-',
+        t.type === 'ingreso' ? 'Ingreso' : 'Gasto',
+        t.status === 'pagado' ? 'Pagado' : 'Pendiente',
+        formatCurrency(t.amount)
+      ]),
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+
+    // Savings Table (if any)
+    if (savings.length > 0) {
+      doc.addPage();
+      doc.text('Inversiones y Ahorros', 14, 20);
+      const { history, accumulated } = calculateCompoundInterest();
+      autoTable(doc, {
+        startY: 25,
+        head: [['Nombre', 'Fecha Inicio', 'Monto Base', 'Ganancia', 'Valor Actual']],
+        body: history.map(s => [
+          s.name,
+          new Date(s.date).toLocaleDateString(),
+          formatCurrency(s.amount),
+          formatCurrency(s.interestEarned),
+          formatCurrency(s.currentValue)
+        ]),
+        foot: [['', '', 'TOTAL PATRIMONIO', '', formatCurrency(accumulated)]],
+        headStyles: { fillColor: [16, 185, 129] } // Income color
+      });
+    }
+
+    // Business Table (if any)
+    if (businessTransactions.length > 0) {
+      doc.addPage();
+      doc.text('Módulo Empresarial', 14, 20);
+      autoTable(doc, {
+        startY: 25,
+        head: [['Fecha', 'Tipo', 'Categoría', 'Cliente', 'Estado', 'Monto']],
+        body: businessTransactions.map(t => [
+          new Date(t.date).toLocaleDateString(),
+          t.type === 'ingreso' ? 'Venta' : 'Costo',
+          t.category,
+          t.businessClient || '-',
+          t.status === 'pagado' ? 'Pagado' : 'Pendiente',
+          formatCurrency(t.amount)
+        ]),
+        headStyles: { fillColor: [99, 102, 241] }
+      });
+    }
+
+    // Capture Charts
+    const chartElements = document.querySelectorAll('canvas');
+    if (chartElements.length > 0) {
+      doc.addPage();
+      doc.text('Análisis de Tendencias y Distribución', 14, 20);
+
+      let currentY = 30;
+      for (let i = 0; i < Math.min(chartElements.length, 3); i++) {
+        try {
+          const canvas = chartElements[i];
+          const imgData = canvas.toDataURL('image/png');
+          const imgWidth = 180;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          if (currentY + imgHeight > 280) {
+            doc.addPage();
+            currentY = 20;
+          }
+
+          doc.addImage(imgData, 'PNG', 15, currentY, imgWidth, imgHeight);
+          currentY += imgHeight + 10;
+        } catch (e) {
+          console.error('Error capturing chart for PDF:', e);
+        }
+      }
+    }
+
+    doc.save(`Reporte_Finanzas_${dateStr}.pdf`);
   };
 
 
@@ -1481,7 +1598,7 @@ export default function FinanceTracker() {
                     <div className="flex justify-between items-center mb-6">
                       <div className="space-y-1">
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em]">Balance Neto</p>
-                        <h2 className="text-4xl font-extrabold font-outfit tracking-tight">${formatCurrency(balance)}</h2>
+                        <h2 className="text-4xl font-extrabold font-outfit tracking-tight">{formatCurrency(balance)}</h2>
                       </div>
                       <div className="bg-primary/20 p-4 rounded-2xl border border-primary/20 backdrop-blur-sm">
                         <Wallet className="w-6 h-6 text-primary" />
@@ -1496,7 +1613,7 @@ export default function FinanceTracker() {
                           </div>
                           <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Ingresos</span>
                         </div>
-                        <p className="text-xl font-bold text-income leading-none">${formatCurrency(totalIngresos)}</p>
+                        <p className="text-xl font-bold text-income leading-none">{formatCurrency(totalIngresos)}</p>
                       </div>
                       <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border/50 backdrop-blur-md">
                         <div className="flex items-center gap-2 mb-2">
@@ -1505,7 +1622,7 @@ export default function FinanceTracker() {
                           </div>
                           <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Gastos</span>
                         </div>
-                        <p className="text-xl font-bold text-expense leading-none">${formatCurrency(totalGastos)}</p>
+                        <p className="text-xl font-bold text-expense leading-none">{formatCurrency(totalGastos)}</p>
                       </div>
                     </div>
                   </div>
@@ -1688,9 +1805,16 @@ export default function FinanceTracker() {
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-black text-white">Análisis Mensual</h2>
                   <div className="flex justify-center gap-4">
-                    <span className="text-[10px] font-bold text-income bg-income/10 px-3 py-1 rounded-full uppercase">Ingresos: ${formatCurrency(totalIngresos)}</span>
-                    <span className="text-[10px] font-bold text-expense bg-expense/10 px-3 py-1 rounded-full uppercase">Gastos: ${formatCurrency(totalGastos)}</span>
+                    <span className="text-[10px] font-bold text-income bg-income/10 px-3 py-1 rounded-full uppercase">Ingresos: {formatCurrency(totalIngresos)}</span>
+                    <span className="text-[10px] font-bold text-expense bg-expense/10 px-3 py-1 rounded-full uppercase">Gastos: {formatCurrency(totalGastos)}</span>
                   </div>
+                  <button
+                    onClick={generatePDFReport}
+                    className="mx-auto mt-4 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg shadow-primary/30 transition-all active:scale-95"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span className="text-xs font-black uppercase tracking-widest">Descargar PDF</span>
+                  </button>
                 </div>
 
                 {/* Pie Chart */}
@@ -1795,7 +1919,7 @@ export default function FinanceTracker() {
                   <div className="flex justify-between items-center">
                     <div className="space-y-1">
                       <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Patrimonio Total</p>
-                      <h2 className="text-3xl font-black text-white">${formatCurrency(accumulated)}</h2>
+                      <h2 className="text-3xl font-black text-white">{formatCurrency(accumulated)}</h2>
                     </div>
                     <div className="bg-primary/10 p-3 rounded-2xl">
                       <PiggyBank className="w-6 h-6 text-primary" />
@@ -1805,12 +1929,12 @@ export default function FinanceTracker() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-dark-border">
                     <div>
                       <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Invertido</p>
-                      <p className="text-lg font-bold text-white">${formatCurrency(totalInvested)}</p>
+                      <p className="text-lg font-bold text-white">{formatCurrency(totalInvested)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] font-bold text-income uppercase mb-1">Rendimiento</p>
                       <p className="text-lg font-bold text-income tracking-tighter">
-                        +${formatCurrency(totalInterest)}
+                        +{formatCurrency(totalInterest)}
                         <span className="text-[10px] ml-1">({totalInvested > 0 ? ((totalInterest / totalInvested) * 100).toFixed(1) : 0}%)</span>
                       </p>
                     </div>
@@ -1836,13 +1960,13 @@ export default function FinanceTracker() {
                         <p className="text-[10px] text-gray-500 font-bold uppercase">{new Date(saving.date).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-primary leading-none">${formatCurrency(saving.currentValue)}</p>
+                        <p className="text-sm font-black text-primary leading-none">{formatCurrency(saving.currentValue)}</p>
                         <p className="text-[10px] text-income font-bold uppercase mt-1 leading-none tracking-tighter">+{((saving.interestEarned / saving.amount) * 100).toFixed(1)}% Ganancia</p>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase border-t border-dark-border/50 pt-4">
-                      <span>Base: ${formatCurrency(saving.amount)}</span>
+                      <span>Base: {formatCurrency(saving.amount)}</span>
                       <button onClick={() => deleteSaving(saving.id)} className="text-gray-700 hover:text-expense transition flex items-center gap-1">
                         <Trash2 className="w-3 h-3" />
                         <span>Retirar</span>
@@ -1868,7 +1992,7 @@ export default function FinanceTracker() {
                   <div className="flex justify-between items-center mb-6">
                     <div className="space-y-1">
                       <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Compromisos Mes</p>
-                      <h2 className="text-3xl font-black text-white">${formatCurrency(totalPending)}</h2>
+                      <h2 className="text-3xl font-black text-white">{formatCurrency(totalPending)}</h2>
                     </div>
                     <div className="bg-primary/10 p-4 rounded-2xl">
                       <Clock className="w-6 h-6 text-primary" />
@@ -1915,7 +2039,7 @@ export default function FinanceTracker() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-black text-white leading-none">${formatCurrency(reminder.amount)}</p>
+                        <p className="text-lg font-black text-white leading-none">{formatCurrency(reminder.amount)}</p>
                         <button
                           onClick={() => toggleReminderStatus(reminder.id, reminder.status, reminder)}
                           className={`text-[8px] font-bold uppercase tracking-widest mt-2 px-3 py-1 rounded-full border transition-all ${reminder.status === 'pagado' ? 'bg-income/20 border-income/50 text-income' : 'border-dark-border text-gray-500 hover:text-white hover:border-white'
@@ -1980,7 +2104,7 @@ export default function FinanceTracker() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
                         <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Ventas</p>
-                        <p className="text-lg font-bold text-income">${formatCurrency(totalBusinessIncome)}</p>
+                        <p className="text-lg font-bold text-income">{formatCurrency(totalBusinessIncome)}</p>
                       </div>
                       <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
                         <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Costos</p>
