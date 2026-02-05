@@ -1894,65 +1894,93 @@ export default function FinanceTracker() {
             </div>
           </div>
         ) : activeTab === 'empresa' ? (
-          <div className="space-y-6">
-            {/* Business KPIs */}
-            <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors"></div>
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="space-y-1">
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Negocio Actual</p>
-                    <h2 className="text-3xl font-black text-white">${formatCurrency(businessBalance)}</h2>
-                  </div>
-                  <div className="bg-primary/20 p-4 rounded-2xl">
-                    <Settings className="w-6 h-6 text-primary" />
+          (() => {
+            // Calculate business metrics
+            const filteredBusinessTransactions = businessTransactions.filter(t => {
+              const tDate = new Date(t.date);
+              if (businessDateFilter === 'dia') {
+                return tDate.toDateString() === businessSelectedDate.toDateString();
+              } else if (businessDateFilter === 'mes') {
+                return tDate.getMonth() === businessSelectedDate.getMonth() &&
+                  tDate.getFullYear() === businessSelectedDate.getFullYear();
+              } else if (businessDateFilter === 'ano') {
+                return tDate.getFullYear() === businessSelectedDate.getFullYear();
+              }
+              return true;
+            });
+
+            const totalBusinessIncome = filteredBusinessTransactions
+              .filter(t => t.type === 'ingreso' && t.status === 'pagado')
+              .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalBusinessExpense = filteredBusinessTransactions
+              .filter(t => t.type === 'egreso' && t.status === 'pagado')
+              .reduce((sum, t) => sum + t.amount, 0);
+
+            const businessBalance = totalBusinessIncome - totalBusinessExpense;
+
+            return (
+              <div className="space-y-6">
+                {/* Business KPIs */}
+                <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors"></div>
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="space-y-1">
+                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Negocio Actual</p>
+                        <h2 className="text-3xl font-black text-white">${formatCurrency(businessBalance)}</h2>
+                      </div>
+                      <div className="bg-primary/20 p-4 rounded-2xl">
+                        <Settings className="w-6 h-6 text-primary" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
+                        <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Ventas</p>
+                        <p className="text-lg font-bold text-income">${formatCurrency(totalBusinessIncome)}</p>
+                      </div>
+                      <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
+                        <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Costos</p>
+                        <p className="text-lg font-bold text-expense">${formatCurrency(totalBusinessExpense)}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
-                    <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Ventas</p>
-                    <p className="text-lg font-bold text-income">${formatCurrency(totalBusinessIncome)}</p>
-                  </div>
-                  <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
-                    <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Costos</p>
-                    <p className="text-lg font-bold text-expense">${formatCurrency(totalBusinessExpense)}</p>
-                  </div>
+
+                {/* Business Timeline */}
+                <div className="space-y-4 pb-20">
+                  <h3 className="font-bold text-white uppercase tracking-widest text-[10px] px-2">Operaciones Comerciales</h3>
+                  {filteredBusinessTransactions.length === 0 ? (
+                    <div className="bg-dark-card/30 rounded-3xl p-10 text-center border-2 border-dashed border-dark-border">
+                      <p className="text-gray-500 text-xs font-bold uppercase">Sin registros comerciales</p>
+                    </div>
+                  ) : (
+                    filteredBusinessTransactions.map((t) => (
+                      <div key={t.id} className="bg-dark-card border border-dark-border rounded-3xl p-4 flex items-center justify-between group">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'ingreso' ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}`}>
+                            {t.type === 'ingreso' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white leading-none mb-1">{t.category}</p>
+                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">{t.description || 'Venta general'}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-base font-black ${t.type === 'ingreso' ? 'text-income' : 'text-expense'}`}>
+                            {t.type === 'ingreso' ? '+' : '-'}${formatCurrency(t.amount)}
+                          </p>
+                          <button onClick={() => deleteBusinessTransaction(t.id, t)} className="text-gray-700 hover:text-expense transition mt-1">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* Business Timeline */}
-            <div className="space-y-4 pb-20">
-              <h3 className="font-bold text-white uppercase tracking-widest text-[10px] px-2">Operaciones Comerciales</h3>
-              {filteredBusinessTransactions.length === 0 ? (
-                <div className="bg-dark-card/30 rounded-3xl p-10 text-center border-2 border-dashed border-dark-border">
-                  <p className="text-gray-500 text-xs font-bold uppercase">Sin registros comerciales</p>
-                </div>
-              ) : (
-                filteredBusinessTransactions.map((t) => (
-                  <div key={t.id} className="bg-dark-card border border-dark-border rounded-3xl p-4 flex items-center justify-between group">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.type === 'ingreso' ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'}`}>
-                        {t.type === 'ingreso' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white leading-none mb-1">{t.category}</p>
-                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">{t.description || 'Venta general'}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-base font-black ${t.type === 'ingreso' ? 'text-income' : 'text-expense'}`}>
-                        {t.type === 'ingreso' ? '+' : '-'}${formatCurrency(t.amount)}
-                      </p>
-                      <button onClick={() => deleteBusinessTransaction(t.id, t)} className="text-gray-700 hover:text-expense transition mt-1">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+            );
+          })()
         ) : null}
       </div>
 
