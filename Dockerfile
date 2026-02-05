@@ -11,15 +11,14 @@ RUN npm ci
 # Copy the rest of the application
 COPY . .
 
-# Pass build arguments for Supabase (moved here so they don't break dependency cache)
+# Pass build arguments for Supabase during build only
 ARG REACT_APP_SUPABASE_URL
 ARG REACT_APP_SUPABASE_ANON_KEY
 
-# Set them as ENV for the build process (React will pick these up)
-ENV REACT_APP_SUPABASE_URL=$REACT_APP_SUPABASE_URL
-ENV REACT_APP_SUPABASE_ANON_KEY=$REACT_APP_SUPABASE_ANON_KEY
-
-RUN npm run build
+# Run build with injected variables
+RUN REACT_APP_SUPABASE_URL=$REACT_APP_SUPABASE_URL \
+    REACT_APP_SUPABASE_ANON_KEY=$REACT_APP_SUPABASE_ANON_KEY \
+    npm run build
 
 # Production stage
 FROM nginx:stable-alpine
