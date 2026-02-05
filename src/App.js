@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2, Lock, Mail } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
@@ -193,136 +193,76 @@ export default function FinanceTracker() {
 
 
 
-  useEffect(() => {
-    if (!currentUser) {
-      setTransactions([]);
-      return;
-    }
+  const fetchTransactions = useCallback(async () => {
+    if (!currentUser) return;
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
 
-    const fetchTransactions = async () => {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('created_at', { ascending: false });
-
-      if (error) console.error('Error fetching transactions:', error);
-      else setTransactions(data);
-    };
-
-    fetchTransactions();
-
-    /* Realtime disabled
-    const subscription = supabase
-      .channel('public:transactions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${currentUser.id}` }, fetchTransactions)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-    */
+    if (error) console.error('Error fetching transactions:', error);
+    else setTransactions(data);
   }, [currentUser]);
 
-
-
   useEffect(() => {
-    if (!currentUser || !showSavingsModule) {
-      setSavings([]);
-      return;
-    }
+    fetchTransactions();
+  }, [fetchTransactions]);
 
-    const fetchSavings = async () => {
-      const { data, error } = await supabase
-        .from('savings')
-        .select('*')
-        .order('date', { ascending: false });
 
-      if (error) console.error('Error fetching savings:', error);
-      else setSavings(data);
-    };
 
-    fetchSavings();
+  const fetchSavings = useCallback(async () => {
+    if (!currentUser || !showSavingsModule) return;
+    const { data, error } = await supabase
+      .from('savings')
+      .select('*')
+      .order('date', { ascending: false });
 
-    /* Realtime disabled
-    const subscription = supabase
-      .channel('public:savings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'savings' }, fetchSavings)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-    */
+    if (error) console.error('Error fetching savings:', error);
+    else setSavings(data);
   }, [currentUser, showSavingsModule]);
 
-
-
   useEffect(() => {
-    if (!currentUser || !showRemindersModule) {
-      setReminders([]);
-      return;
+    fetchSavings();
+  }, [fetchSavings]);
+
+
+
+  const fetchReminders = useCallback(async () => {
+    if (!currentUser || !showRemindersModule) return;
+    const { data, error } = await supabase
+      .from('reminders')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: true });
+
+    if (error) console.error('Error fetching reminders:', error);
+    else {
+      const mapped = data.map(r => ({ ...r, dueDate: r.date, name: r.description }));
+      setReminders(mapped);
+      checkRemindersAndNotify(mapped);
     }
-
-    const fetchReminders = async () => {
-      const { data, error } = await supabase
-        .from('reminders')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('date', { ascending: true });
-
-      if (error) console.error('Error fetching reminders:', error);
-      else {
-        const mapped = data.map(r => ({ ...r, dueDate: r.date, name: r.description }));
-        setReminders(mapped);
-        checkRemindersAndNotify(mapped);
-      }
-    };
-
-    fetchReminders();
-
-    /* Realtime disabled
-    const subscription = supabase
-      .channel('public:reminders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reminders', filter: `user_id=eq.${currentUser.id}` }, fetchReminders)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-    */
   }, [currentUser, showRemindersModule]);
 
+  useEffect(() => {
+    fetchReminders();
+  }, [fetchReminders]);
+
+
+  const fetchBusinessTransactions = useCallback(async () => {
+    if (!currentUser || !showBusinessModule) return;
+    const { data, error } = await supabase
+      .from('business_transactions')
+      .select('*')
+      .eq('user_id', currentUser.id);
+
+    if (error) console.error('Error fetching business transactions:', error);
+    else setBusinessTransactions(data);
+  }, [currentUser, showBusinessModule]);
 
   useEffect(() => {
-    if (!currentUser || !showBusinessModule) {
-      setBusinessTransactions([]);
-      return;
-    }
-
-    const fetchBusinessTransactions = async () => {
-      const { data, error } = await supabase
-        .from('business_transactions')
-        .select('*')
-        .eq('user_id', currentUser.id);
-
-      if (error) console.error('Error fetching business transactions:', error);
-      else setBusinessTransactions(data);
-    };
-
     fetchBusinessTransactions();
-
-    /* Realtime disabled
-    const subscription = supabase
-      .channel('public:business_transactions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_transactions', filter: `user_id=eq.${currentUser.id}` }, fetchBusinessTransactions)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-    */
-  }, [currentUser, showBusinessModule]);
+  }, [fetchBusinessTransactions]);
 
 
   // Verificar y crear recordatorios mensuales automáticamente
