@@ -275,69 +275,67 @@ export default function FinanceTracker() {
       isProcessing = true;
       try {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const y = today.getFullYear();
+        const m = today.getMonth();
+        const firstDayOfMonth = new Date(y, m, 1);
+        const lastDayOfMonth = new Date(y, m + 1, 0);
 
         for (const reminder of reminders) {
           if (reminder.frequency !== 'mensual') continue;
-          const dueDate = new Date(reminder.dueDate);
-          dueDate.setHours(0, 0, 0, 0);
 
-          // Si la fecha de vencimiento es hoy o antes
-          if (dueDate <= today) {
-            try {
+          // Verificar si ya existe una transacción para este recordatorio en el mes actual
+          const { data: existingTransactions, error: fetchError } = await supabase
+            .from('transactions')
+            .select('id, date')
+            .eq('user_id', currentUser.id)
+            .eq('reminder_id', reminder.id);
 
-              const { data: existingTransactions, error: fetchError } = await supabase
-                .from('transactions')
-                .select('id, date')
-                .eq('user_id', currentUser.id)
-                .eq('reminder_id', reminder.id);
+          if (fetchError) throw fetchError;
 
-              if (fetchError) throw fetchError;
+          const hasTransactionThisMonth = existingTransactions.some(t => {
+            const transDate = new Date(t.date);
+            return transDate >= firstDayOfMonth && transDate <= lastDayOfMonth;
+          });
 
-              const hasTransactionThisMonth = existingTransactions.some(t => {
-                const transDate = new Date(t.date);
-                return transDate >= firstDayOfMonth && transDate <= lastDayOfMonth;
-              });
+          if (!hasTransactionThisMonth) {
+            // Crear transacción para el día 1 del mes actual
+            await supabase.from('transactions').insert({
+              user_id: currentUser.id,
+              type: 'gasto',
+              amount: reminder.amount,
+              category: reminder.category,
+              description: `${reminder.name} (Pago mensual automático)`,
+              status: 'pendiente',
+              date: firstDayOfMonth.toISOString(),
+              from_reminder: true,
+              reminder_id: reminder.id
+            });
 
-              if (!hasTransactionThisMonth) {
-                await supabase.from('transactions').insert({
-                  user_id: currentUser.id,
-                  type: 'gasto',
-                  amount: reminder.amount,
-                  category: reminder.category,
-                  description: `${reminder.name} (Pago mensual automático)`,
-                  status: 'pendiente',
-                  date: firstDayOfMonth.toISOString(),
-                  from_reminder: true,
-                  reminder_id: reminder.id
-                });
-
-                const nextMonth = new Date(today);
-                nextMonth.setMonth(nextMonth.getMonth() + 1);
-                nextMonth.setDate(1);
-
-                await supabase.from('reminders').update({
-                  date: nextMonth.toISOString().split('T')[0]
-                }).eq('id', reminder.id);
-
-                console.log(`Recordatorio mensual creado: ${reminder.name}`);
-              }
-            } catch (error) {
-              console.error('Error al crear recordatorio mensual automático:', error);
+            // Actualizar la fecha del recordatorio para el próximo vencimiento (opcional pero ayuda a la UI)
+            const nextDueDate = new Date(y, m, new Date(reminder.dueDate).getDate());
+            if (nextDueDate < today) {
+              nextDueDate.setMonth(nextDueDate.getMonth() + 1);
             }
+
+            await supabase.from('reminders').update({
+              date: nextDueDate.toISOString().split('T')[0]
+            }).eq('id', reminder.id);
+
+            console.log(`Recordatorio mensual procesado para este mes: ${reminder.name}`);
+            await fetchTransactions();
           }
         }
+      } catch (err) {
+        console.error('Error en checkAndCreateMonthlyReminders:', err);
       } finally {
         isProcessing = false;
       }
     };
 
     checkAndCreateMonthlyReminders();
-    const interval = setInterval(checkAndCreateMonthlyReminders, 3600000);
+    const interval = setInterval(checkAndCreateMonthlyReminders, 3600000); // Cada hora
     return () => clearInterval(interval);
-  }, [currentUser, showRemindersModule, reminders]);
+  }, [currentUser, showRemindersModule, reminders, fetchTransactions]);
 
 
 
@@ -1507,11 +1505,45 @@ export default function FinanceTracker() {
                   </div>
                 </div>
 
+                {/* Upcoming Reminders (Compact) */}
+                {reminders.filter(r => r.status === 'pendiente' && r.dueDate.startsWith(selectedDate.toISOString().split('-').slice(0, 2).join('-'))).length > 0 && (
+                  <div className="space-y-3 pb-2">
+                    <div className="flex items-center gap-2 px-2">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Pagos Pendientes este Mes</h3>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 py-1">
+                      {reminders
+                        .filter(r => r.status === 'pendiente' && r.dueDate.startsWith(selectedDate.toISOString().split('-').slice(0, 2).join('-')))
+                        .map(reminder => {
+                          const days = getDaysUntilDue(reminder.dueDate);
+                          return (
+                            <div key={reminder.id} className={`min-w-[160px] bg-dark-card border rounded-2xl p-3 shadow-lg ${days < 0 ? 'border-expense/50' : 'border-dark-border'}`}>
+                              <div className="flex justify-between items-start mb-2">
+                                <p className="text-[10px] font-black text-white truncate w-24 uppercase tracking-tighter">{reminder.name}</p>
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${days < 0 ? 'bg-expense text-white' : 'bg-primary/20 text-primary'}`}>
+                                  {days < 0 ? 'Vencido' : `${days}d`}
+                                </span>
+                              </div>
+                              <p className="text-sm font-black text-white leading-none">${formatCurrency(reminder.amount)}</p>
+                              <button
+                                onClick={() => toggleReminderStatus(reminder.id, 'pendiente', reminder)}
+                                className="w-full mt-2 text-[8px] font-bold uppercase tracking-widest bg-white/5 hover:bg-white/10 py-1.5 rounded-lg border border-dark-border transition-all"
+                              >
+                                Marcar Pago
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Date Slider / Timeline Indicator */}
-                <div className="flex items-center justify-between px-2">
+                <div className="flex items-center justify-between px-2 pt-2">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-primary" />
-                    <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Línea de Tiempo</h3>
+                    <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Historial de Movimientos</h3>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => {
@@ -1553,6 +1585,7 @@ export default function FinanceTracker() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
+                              {transaction.from_reminder && <Clock className="w-3 h-3 text-primary" />}
                               <p className="text-sm font-bold text-white tracking-tight">{transaction.category}</p>
                               {transaction.status === 'pendiente' && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
