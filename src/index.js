@@ -19,6 +19,15 @@ if ('serviceWorker' in navigator) {
       .catch(error => {
         console.error('❌ Falló el registro del SW:', error);
       });
+
+    // Escuchar cambios en el controlador para recargar la página automáticamente cuando se activa un nuevo SW
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 } else {
   console.warn('⚠️ Service Workers no son compatibles con este navegador.');

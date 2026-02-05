@@ -488,20 +488,22 @@ export default function FinanceTracker() {
 
 
   const deleteReminder = async (id) => {
-    if (!window.confirm('¿Estás seguro de eliminar este recordatorio? Esto también eliminará las transacciones relacionadas.')) {
+    if (!window.confirm('¿Estás seguro de eliminar este recordatorio? También se eliminarán todas las transacciones generadas automáticamente por él.')) {
       return;
     }
 
     try {
+      // Supabase RLS/cascade should ideally handle this, but we'll do it explicitly
       await supabase.from('transactions').delete().eq('reminder_id', id);
       const { error } = await supabase.from('reminders').delete().eq('id', id);
 
       if (error) throw error;
 
-      alert('Recordatorio y transacciones relacionadas eliminadas');
+      await fetchReminders();
+      await fetchTransactions();
     } catch (error) {
       console.error('Error al eliminar recordatorio:', error);
-      alert('Error al eliminar el recordatorio');
+      alert('Error al realizar la eliminación');
     }
   };
 
@@ -1920,6 +1922,12 @@ export default function FinanceTracker() {
                             }`}
                         >
                           {reminder.status === 'pagado' ? 'Listo' : 'Marcar Pago'}
+                        </button>
+                        <button
+                          onClick={() => deleteReminder(reminder.id)}
+                          className="text-gray-700 hover:text-expense transition p-1.5 rounded-lg hover:bg-expense/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
