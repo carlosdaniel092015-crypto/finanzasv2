@@ -822,6 +822,9 @@ export default function FinanceTracker() {
           .update({ status: newStatus })
           .eq('id', transaction.reminder_id);
       }
+
+      await fetchTransactions();
+      await fetchReminders();
     } catch (error) {
       console.error('Error al actualizar estado:', error);
       alert('Error al actualizar el estado');
@@ -1269,29 +1272,28 @@ export default function FinanceTracker() {
     const now = new Date(selectedDate);
 
     return transactions.filter(t => {
-      // Parse ISO string (UTC) as Local Date explicitly
-      // "2026-02-03T00:00:00Z" -> "2026", "02", "03" -> Local Date Feb 03
       const [y, m, d] = t.date.split('T')[0].split('-').map(Number);
       const transDate = new Date(y, m - 1, d);
 
-      if (dateFilter === 'dia') {
-
+      if (viewMode === 'daily') {
         return transDate.toDateString() === now.toDateString();
+      } else if (viewMode === 'weekly') {
+        // Show current week (Sunday to Saturday)
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+        startOfWeek.setHours(0, 0, 0, 0);
 
-      } else if (dateFilter === 'mes') {
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
 
-        return transDate.getMonth() === now.getMonth() &&
-
-          transDate.getFullYear() === now.getFullYear();
-
+        return transDate >= startOfWeek && transDate <= endOfWeek;
       } else {
-
-        return transDate.getFullYear() === now.getFullYear();
-
+        // monthly, calendar, summary -> Show full month
+        return transDate.getMonth() === now.getMonth() &&
+          transDate.getFullYear() === now.getFullYear();
       }
-
     });
-
   };
 
 
