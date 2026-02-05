@@ -1058,6 +1058,24 @@ export default function FinanceTracker() {
       });
     }
 
+    // Reminders Table (if any)
+    if (reminders.length > 0) {
+      doc.addPage();
+      doc.text('Seguimiento de Recordatorios y Pagos', 14, 20);
+      autoTable(doc, {
+        startY: 25,
+        head: [['Servicio/Pago', 'Vencimiento', 'Frecuencia', 'Estado', 'Monto']],
+        body: reminders.map(r => [
+          r.name,
+          new Date(r.dueDate).toLocaleDateString(),
+          r.frequency === 'mensual' ? 'Mensual' : 'Única',
+          r.status === 'pagado' ? 'Pagado' : 'Pendiente',
+          formatCurrency(r.amount)
+        ]),
+        headStyles: { fillColor: [245, 158, 11] } // Orange/Yellow for reminders
+      });
+    }
+
     // Capture Charts
     const chartElements = document.querySelectorAll('canvas');
     if (chartElements.length > 0) {
