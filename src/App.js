@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2, Lock, Mail } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2, Lock, Mail, Briefcase, Tags } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
@@ -212,7 +212,7 @@ export default function FinanceTracker() {
       setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
       setShowBusinessModule(isBusinessAuthorized || user.email === 'carlosdaniel092015@gmail.com'); // Allow main user to see business too
 
-      if (isBusinessAccount) {
+      if (isBusinessAuthorized) {
         setActiveTab('empresa');
       }
     } else {
