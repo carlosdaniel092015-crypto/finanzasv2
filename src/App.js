@@ -1972,6 +1972,79 @@ export default function FinanceTracker() {
         ) : null}
       </div>
 
+      {/* Notification Center Modal */}
+      {showNotificationConfig && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-end p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationConfig(false)} />
+          <div className="relative w-full max-w-sm bg-dark-card border border-dark-border rounded-3xl p-6 shadow-2xl animate-in slide-in-from-top-10 duration-300 mt-12 mr-0 sm:mr-4">
+
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary/10 rounded-2xl">
+                  <Bell className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-lg">Notificaciones</h3>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest">Avisos de pagos</p>
+                </div>
+              </div>
+              <button onClick={() => setShowNotificationConfig(false)} className="p-2 text-gray-500 hover:text-white transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Permission Status */}
+              <div className="bg-dark/50 rounded-2xl p-4 border border-dark-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-gray-400 uppercase">Estado</span>
+                  <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${notificationsEnabled === 'granted' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'
+                    }`}>
+                    {notificationsEnabled === 'granted' ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+                {notificationsEnabled !== 'granted' && (
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="w-full mt-2 bg-primary hover:bg-blue-600 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                  >
+                    Activar Avisos
+                  </button>
+                )}
+              </div>
+
+              {/* Upcoming Alerts Preview */}
+              <div>
+                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Próximos Vencimientos</h4>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                  {reminders.filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7).length === 0 ? (
+                    <p className="text-center text-gray-600 text-xs py-4 italic">Todo al día</p>
+                  ) : (
+                    reminders
+                      .filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7)
+                      .map(r => {
+                        const days = getDaysUntilDue(r.dueDate);
+                        return (
+                          <div key={r.id} className="flex items-center justify-between p-3 bg-dark/30 rounded-xl border border-dark-border/30">
+                            <div>
+                              <p className="text-white text-xs font-bold">{r.name}</p>
+                              <p className={`text-[9px] font-black uppercase ${days < 0 ? 'text-expense' : 'text-yellow-500'}`}>
+                                {days < 0 ? `Venció hace ${Math.abs(days)} días` : `Vence en ${days} días`}
+                              </p>
+                            </div>
+                            <span className="text-white text-xs font-mono font-bold">${formatCurrency(r.amount)}</span>
+                          </div>
+                        )
+                      })
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Modern Contextual Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-dark-card/90 backdrop-blur-xl border-t border-dark-border z-50 px-6 pb-6 pt-3 flex justify-between items-center max-w-md mx-auto">
         <button
