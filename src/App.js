@@ -113,6 +113,8 @@ export default function FinanceTracker() {
   const [isOCRProcessing, setIsOCRProcessing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]); // Array of {url, preview, file}
+  const [categoryEditType, setCategoryEditType] = useState('gasto');
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   const VAPID_PUBLIC_KEY = 'BKRApo1ItUND05_-VfyO5t4NIZkZQTAVMRrCSqb4fpEJgkdNITq356YwxyhuP2N0u_-lvHOb5tVMlnXvZuTvzZ4';
 
@@ -127,19 +129,35 @@ export default function FinanceTracker() {
 
 
 
-  const reminderCategories = ['Préstamos', 'Tarjetas de Crédito', 'Agua', 'Luz', 'Internet', 'Teléfono', 'Cable/TV', 'Streaming', 'Alquiler', 'Seguro', 'Otros'];
+  const [dynamicCategories, setDynamicCategories] = useState(() => {
+    const saved = localStorage.getItem('app_categories_v2');
+    if (saved) return JSON.parse(saved);
+    return {
+      gasto: ['Pasaje', 'Préstamos', 'Tarjetas', 'Alquiler', 'Comidas', 'Streaming', 'Agua', 'Luz', 'Internet', 'Imprevistos', 'Salud', 'Gym', 'Gasolina', 'Vehículo', 'Vacaciones', 'Niños', 'Plan', 'Compras', 'Deportes'],
+      ingreso: ['Ahorros', 'Salario', 'Quincena', 'Quincena + Incentivo', 'Otros', 'Depósito', 'Comisiones', 'Remesas'],
+      business_ingreso: ['Ventas', 'Servicios', 'Productos', 'Comisiones', 'Consultoría', 'Alquiler de equipos', 'Otros ingresos'],
+      business_egreso: ['Nómina', 'Alquiler', 'Servicios públicos', 'Compra de inventario', 'Marketing', 'Transporte', 'Equipos', 'Mantenimiento', 'Impuestos', 'Seguros', 'Otros gastos'],
+      reminder: ['Préstamos', 'Tarjetas de Crédito', 'Agua', 'Luz', 'Internet', 'Teléfono', 'Cable/TV', 'Streaming', 'Alquiler', 'Seguro', 'Otros']
+    };
+  });
 
-  const businessCategories = {
-    ingreso: ['Ventas', 'Servicios', 'Productos', 'Comisiones', 'Consultoría', 'Alquiler de equipos', 'Otros ingresos'],
-    egreso: ['Nómina', 'Alquiler', 'Servicios públicos', 'Compra de inventario', 'Marketing', 'Transporte', 'Equipos', 'Mantenimiento', 'Impuestos', 'Seguros', 'Otros gastos']
+  useEffect(() => {
+    localStorage.setItem('app_categories_v2', JSON.stringify(dynamicCategories));
+  }, [dynamicCategories]);
+
+  const addCategory = (type, name) => {
+    if (!name.trim()) return;
+    setDynamicCategories(prev => ({
+      ...prev,
+      [type]: [...new Set([...prev[type], name.trim()])]
+    }));
   };
 
-  const categories = {
-
-    gasto: ['Pasaje', 'Préstamos', 'Tarjetas', 'Alquiler', 'Comidas', 'Streaming', 'Agua', 'Luz', 'Internet', 'Imprevistos', 'Salud', 'Gym', 'Gasolina', 'Vehículo', 'Vacaciones', 'Niños', 'Plan', 'Compras', 'Deportes'],
-
-    ingreso: ['Ahorros', 'Salario', 'Quincena', 'Quincena + Incentivo', 'Otros', 'Depósito', 'Comisiones', 'Remesas']
-
+  const deleteCategory = (type, name) => {
+    setDynamicCategories(prev => ({
+      ...prev,
+      [type]: prev[type].filter(cat => cat !== name)
+    }));
   };
 
 
@@ -1166,6 +1184,8 @@ export default function FinanceTracker() {
         amount: numericAmount,
         category: businessCategory,
         description: businessDescription,
+        businessClient: businessClient,
+        businessInvoice: businessInvoice,
         status: businessStatus,
         date: new Date().toISOString()
       });
@@ -2113,7 +2133,7 @@ export default function FinanceTracker() {
                     <div className="flex justify-between items-center mb-6">
                       <div className="space-y-1">
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Negocio Actual</p>
-                        <h2 className="text-3xl font-black text-white">${formatCurrency(businessBalance)}</h2>
+                        <h2 className="text-3xl font-black text-white">{formatCurrency(businessBalance)}</h2>
                       </div>
                       <div className="bg-primary/20 p-4 rounded-2xl">
                         <Settings className="w-6 h-6 text-primary" />
@@ -2126,7 +2146,66 @@ export default function FinanceTracker() {
                       </div>
                       <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
                         <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Costos</p>
-                        <p className="text-lg font-bold text-expense">${formatCurrency(totalBusinessExpense)}</p>
+                        <p className="text-lg font-bold text-expense">{formatCurrency(totalBusinessExpense)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category Management */}
+                <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-primary/10 rounded-2xl">
+                      <Layout className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-white">Gestionar Categorías</h3>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Personaliza tus filtros</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.keys(dynamicCategories).map(type => (
+                        <button
+                          key={type}
+                          onClick={() => setCategoryEditType(type)}
+                          className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${categoryEditType === type ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-dark/40 text-gray-500 border border-dark-border'}`}
+                        >
+                          {type === 'gasto' ? 'Gasto Pers.' :
+                            type === 'ingreso' ? 'Ingreso Pers.' :
+                              type === 'business_ingreso' ? 'Ventas Neg.' :
+                                type === 'business_egreso' ? 'Costos Neg.' : 'Avisos'}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Nueva categoría..."
+                          className="flex-1 bg-dark/50 border border-dark-border rounded-xl py-3 px-4 text-xs font-bold focus:border-primary outline-none text-white"
+                        />
+                        <button
+                          onClick={() => { addCategory(categoryEditType, newCategoryName); setNewCategoryName(''); }}
+                          className="bg-primary hover:bg-blue-600 text-white p-3 rounded-xl transition-all"
+                        >
+                          <PlusCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar pr-1">
+                        {dynamicCategories[categoryEditType].map(cat => (
+                          <div key={cat} className="flex items-center justify-between bg-dark/20 border border-dark-border/30 px-3 py-2 rounded-xl group">
+                            <span className="text-[10px] font-bold text-gray-400 truncate w-24">{cat}</span>
+                            <button onClick={() => deleteCategory(categoryEditType, cat)} className="text-gray-700 hover:text-expense opacity-0 group-hover:opacity-100 transition-opacity">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -2159,7 +2238,7 @@ export default function FinanceTracker() {
                         </div>
                         <div className="text-right">
                           <p className={`text-base font-black ${t.type === 'ingreso' ? 'text-income' : 'text-expense'}`}>
-                            {t.type === 'ingreso' ? '+' : '-'}${formatCurrency(t.amount)}
+                            {t.type === 'ingreso' ? '+' : '-'}{formatCurrency(t.amount)}
                           </p>
                           <div className="flex justify-end gap-2 mt-2">
                             <button
@@ -2243,7 +2322,7 @@ export default function FinanceTracker() {
                                 {days < 0 ? `Venció hace ${Math.abs(days)} días` : `Vence en ${days} días`}
                               </p>
                             </div>
-                            <span className="text-white text-xs font-mono font-bold">${formatCurrency(r.amount)}</span>
+                            <span className="text-white text-xs font-mono font-bold">{formatCurrency(r.amount)}</span>
                           </div>
                         )
                       })
@@ -2382,7 +2461,7 @@ export default function FinanceTracker() {
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
                           <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
                             <option value="">Seleccionar</option>
-                            {categories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                            {dynamicCategories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                           </select>
                         </div>
                         <div className="space-y-2">
@@ -2463,7 +2542,7 @@ export default function FinanceTracker() {
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
                       <div className="relative group">
                         <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                        <input type="number" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                        <input type="text" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -2475,7 +2554,7 @@ export default function FinanceTracker() {
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
                         <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
                           <option value="">Seleccionar</option>
-                          {reminderCategories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                          {dynamicCategories.reminder.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -2511,7 +2590,7 @@ export default function FinanceTracker() {
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
                       <div className="relative group">
                         <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                        <input type="number" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                        <input type="text" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
                       </div>
                     </div>
 
@@ -2520,7 +2599,7 @@ export default function FinanceTracker() {
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
                         <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
                           <option value="">Seleccionar</option>
-                          {businessCategories[businessType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                          {dynamicCategories[businessType === 'ingreso' ? 'business_ingreso' : 'business_egreso'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
                         </select>
                       </div>
                       <div className="space-y-2">
