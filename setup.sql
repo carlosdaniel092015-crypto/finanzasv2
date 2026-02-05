@@ -19,3 +19,33 @@ USING (auth.uid() = user_id);
 
 -- Para habilitar las notificaciones diarias sugeridas:
 -- ALTER TABLE reminders ADD COLUMN IF NOT EXISTS last_notified_at DATE;
+
+-- Create storage bucket for receipts
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('receipts', 'receipts', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Add receipt_images column to transactions table
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS receipt_images TEXT[];
+
+-- Storage policies for receipts bucket
+CREATE POLICY "Users can upload their own receipts"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'receipts' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can view their own receipts"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'receipts' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete their own receipts"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'receipts' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);

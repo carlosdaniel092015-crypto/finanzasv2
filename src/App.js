@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
@@ -109,6 +109,7 @@ export default function FinanceTracker() {
   const [viewMode, setViewMode] = useState('daily'); // daily, calendar, weekly, monthly, summary
   const [isOCRProcessing, setIsOCRProcessing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]); // Array of {url, preview, file}
 
   const VAPID_PUBLIC_KEY = 'BKRApo1ItUND05_-VfyO5t4NIZkZQTAVMRrCSqb4fpEJgkdNITq356YwxyhuP2N0u_-lvHOb5tVMlnXvZuTvzZ4';
 
@@ -753,6 +754,9 @@ export default function FinanceTracker() {
     }
 
     try {
+      // Upload images first
+      const imageUrls = uploadedImages.length > 0 ? await uploadImagesToStorage() : [];
+
       const { error } = await supabase.from('transactions').insert({
         user_id: currentUser.id,
         type: transactionType,
@@ -761,7 +765,8 @@ export default function FinanceTracker() {
         description,
         status: transactionType === 'ingreso' ? 'pagado' : status,
         date: new Date().toISOString(),
-        from_reminder: false
+        from_reminder: false,
+        receipt_images: imageUrls
       });
 
       if (error) throw error;
@@ -769,6 +774,7 @@ export default function FinanceTracker() {
       setAmount('');
       setCategory('');
       setDescription('');
+      setUploadedImages([]);
     } catch (error) {
       console.error('Error al agregar transacción:', error);
       alert('Error al agregar la transacción');
@@ -1152,44 +1158,57 @@ export default function FinanceTracker() {
     });
   };
 
+
   const handleOCRFile = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
     setIsOCRProcessing(true);
+
     try {
-      const { data: { text } } = await Tesseract.recognize(file, 'spa+eng');
+      // Process first file for OCR
+      const file = files[0];
 
-      // Buscar monto
-      const amountRegex = /(?:total|monto|importe|sum|pagar).*?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/i;
-      const amountMatch = text.match(amountRegex);
+      // Create preview URLs for all files
+      const newImages = files.map(f => ({
+        file: f,
+        preview: URL.createObjectURL(f),
+        url: null // Will be set after upload
+      }));
 
-      if (amountMatch) {
-        setAmount(amountMatch[1].replace(',', ''));
-      } else {
-        // Fallback: buscar cualquier número decimal grande
-        const prices = text.match(/\d{1,6}[.,]\d{2}/g);
-        if (prices) {
-          const maxPrice = Math.max(...prices.map(p => parseFloat(p.replace(',', ''))));
-          setAmount(maxPrice.toString());
+      setUploadedImages(prev => [...prev, ...newImages]);
+
+      // Only do OCR on images, not PDFs
+      if (file.type.startsWith('image/')) {
+        const { data: { text } } = await Tesseract.recognize(file, 'spa+eng');
+
+        // Buscar monto
+        const amountRegex = /(?:total|monto|importe|sum|pagar).*?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/i;
+        const amountMatch = text.match(amountRegex);
+
+        if (amountMatch) {
+          setAmount(amountMatch[1].replace(',', ''));
+        } else {
+          // Fallback: buscar cualquier número decimal grande
+          const prices = text.match(/\d{1,6}[.,]\d{2}/g);
+          if (prices) {
+            const maxPrice = Math.max(...prices.map(p => parseFloat(p.replace(',', ''))));
+            setAmount(maxPrice.toString());
+          }
         }
+
+        // Buscar descripción (usar primera línea significativa)
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+        if (lines.length > 0) {
+          setDescription(lines[0].substring(0, 50));
+        }
+
+        // Intentar categorizar
+        const lowText = text.toLowerCase();
+        if (lowText.includes('super') || lowText.includes('comida') || lowText.includes('restaurante')) setCategory('Comidas');
+        else if (lowText.includes('uber') || lowText.includes('didi') || lowText.includes('gasolin')) setCategory('Pasaje');
+        else if (lowText.includes('farmacia') || lowText.includes('medico') || lowText.includes('clinica')) setCategory('Salud');
       }
-
-      // Buscar descripción (usar primera línea significativa)
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
-      if (lines.length > 0) {
-        setDescription(lines[0].substring(0, 50));
-      }
-
-      // Intentar categorizar
-      const lowText = text.toLowerCase();
-      if (lowText.includes('super') || lowText.includes('comida') || lowText.includes('restaurante')) setCategory('comida');
-      else if (lowText.includes('uber') || lowText.includes('didi') || lowText.includes('gasolin')) setCategory('transporte');
-      else if (lowText.includes('farmacia') || lowText.includes('medico') || lowText.includes('clinica')) setCategory('salud');
-      else setCategory('otros');
-
-      alert("Información extraída automáticamente. Por favor revisa los campos.");
-      setActiveTab('finanzas');
     } catch (err) {
       console.error("OCR Error:", err);
       alert("No se pudo extraer la información automáticamente.");
@@ -1197,6 +1216,45 @@ export default function FinanceTracker() {
       setIsOCRProcessing(false);
     }
   };
+
+  const removeImage = (index) => {
+    setUploadedImages(prev => {
+      const newImages = [...prev];
+      URL.revokeObjectURL(newImages[index].preview);
+      newImages.splice(index, 1);
+      return newImages;
+    });
+  };
+
+  const uploadImagesToStorage = async () => {
+    const uploadedUrls = [];
+
+    for (const img of uploadedImages) {
+      if (img.url) {
+        uploadedUrls.push(img.url);
+        continue;
+      }
+
+      const fileName = `${currentUser.id}/${Date.now()}_${img.file.name}`;
+      const { data, error } = await supabase.storage
+        .from('receipts')
+        .upload(fileName, img.file);
+
+      if (error) {
+        console.error('Error uploading image:', error);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('receipts')
+        .getPublicUrl(fileName);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    return uploadedUrls;
+  };
+
 
   const filterTransactionsByDate = () => {
     const now = new Date(selectedDate);
@@ -2039,7 +2097,7 @@ export default function FinanceTracker() {
               </div>
 
               {/* OCR Fast Action */}
-              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-8 flex items-center justify-between group active:scale-[0.98] transition-all">
+              <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
                     <Camera className="w-6 h-6 text-white" />
@@ -2051,9 +2109,55 @@ export default function FinanceTracker() {
                 </div>
                 <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
                   Subir
-                  <input type="file" className="hidden" accept="image/*,application/pdf" onChange={(e) => { handleOCRFile(e); setShowAddModal(false); }} />
+                  <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
                 </label>
               </div>
+
+              {/* Uploaded Images Preview */}
+              {uploadedImages.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {uploadedImages.map((img, index) => (
+                      <div key={index} className="relative group">
+                        <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
+                          {img.file.type.startsWith('image/') ? (
+                            <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <FileText className="w-8 h-8 text-primary" />
+                            </div>
+                          )}
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => removeImage(index)}
+                            className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(img.preview);
+                              alert('Link copiado');
+                            }}
+                            className="bg-dark-card/90 backdrop-blur-sm text-gray-400 p-1.5 rounded-lg hover:text-white transition-all"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            className="bg-dark-card/90 backdrop-blur-sm text-gray-400 p-1.5 rounded-lg hover:text-primary transition-all"
+                          >
+                            <Bookmark className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-6">
                 <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
