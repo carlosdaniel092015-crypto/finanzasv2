@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files separately to leverage Docker layer caching
 COPY package*.json ./
 
-# Use npm ci for a more reliable and reproducible build
-RUN npm ci
+# Use npm install to handle potential lockfile sync issues
+RUN npm install
 
 # Copy the rest of the application
 COPY . .
