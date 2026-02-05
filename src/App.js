@@ -1958,7 +1958,8 @@ export default function FinanceTracker() {
                   })()}
                 </div>
               </div>
-            </div>
+            ) : null}
+          </div>
         ) : activeTab === 'ahorros' ? (
           <div className="space-y-6">
             {/* Premium Savings KPIs */}
@@ -2383,335 +2384,335 @@ export default function FinanceTracker() {
                 </div>
               </div>
             </div>
-            )
+          </div>
+        )
         }
 
-            {/* Modern Contextual Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 bg-dark-card/90 backdrop-blur-xl border-t border-dark-border z-50 px-6 pb-6 pt-3 flex justify-between items-center max-w-md mx-auto">
-              <button
-                onClick={() => setActiveTab('finanzas')}
-                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'finanzas' ? 'text-primary scale-110' : 'text-gray-500'}`}
-              >
-                <Layout className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Panel</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('ahorros')}
-                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'ahorros' ? 'text-primary scale-110' : 'text-gray-500'}`}
-              >
-                <PiggyBank className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Ahorros</span>
-              </button>
+        {/* Modern Contextual Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-dark-card/90 backdrop-blur-xl border-t border-dark-border z-50 px-6 pb-6 pt-3 flex justify-between items-center max-w-md mx-auto">
+          <button
+            onClick={() => setActiveTab('finanzas')}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'finanzas' ? 'text-primary scale-110' : 'text-gray-500'}`}
+          >
+            <Layout className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-tighter">Panel</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('ahorros')}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'ahorros' ? 'text-primary scale-110' : 'text-gray-500'}`}
+          >
+            <PiggyBank className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-tighter">Ahorros</span>
+          </button>
 
-              {/* Floating Add Button */}
-              <div className="relative -mt-12">
-                <button
-                  onClick={() => setShowAddModal(!showAddModal)}
-                  className={`w-14 h-14 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${showAddModal ? 'bg-expense rotate-45' : 'bg-primary'
-                    }`}
-                >
-                  <PlusCircle className="w-8 h-8 text-white" />
-                </button>
-              </div>
+          {/* Floating Add Button */}
+          <div className="relative -mt-12">
+            <button
+              onClick={() => setShowAddModal(!showAddModal)}
+              className={`w-14 h-14 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${showAddModal ? 'bg-expense rotate-45' : 'bg-primary'
+                }`}
+            >
+              <PlusCircle className="w-8 h-8 text-white" />
+            </button>
+          </div>
 
-              <button
-                onClick={() => setActiveTab('recordatorios')}
-                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'recordatorios' ? 'text-primary scale-110' : 'text-gray-500'}`}
-              >
-                <Clock className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Avisos</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('empresa')}
-                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'empresa' ? 'text-primary scale-110' : 'text-gray-500'}`}
-              >
-                <Briefcase className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Empresa</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('categorias')}
-                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'categorias' ? 'text-primary scale-110' : 'text-gray-500'}`}
-              >
-                <Tags className="w-6 h-6" />
-                <span className="text-[10px] font-bold uppercase tracking-tighter">Categorías</span>
-              </button>
-            </div>
+          <button
+            onClick={() => setActiveTab('recordatorios')}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'recordatorios' ? 'text-primary scale-110' : 'text-gray-500'}`}
+          >
+            <Clock className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-tighter">Avisos</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('empresa')}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'empresa' ? 'text-primary scale-110' : 'text-gray-500'}`}
+          >
+            <Briefcase className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-tighter">Empresa</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('categorias')}
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'categorias' ? 'text-primary scale-110' : 'text-gray-500'}`}
+          >
+            <Tags className="w-6 h-6" />
+            <span className="text-[10px] font-bold uppercase tracking-tighter">Categorías</span>
+          </button>
+        </div>
 
-            {/* Premium Add Modal with OCR */}
-            {
+        {/* Premium Add Modal with OCR */}
+        {
 
-              showAddModal && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-                  <div className="bg-dark-card w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 border-t border-dark-border shadow-2xl animate-in slide-in-from-bottom-full duration-500 overflow-y-auto max-h-[90vh]">
-                    <div className="flex justify-between items-center mb-8">
-                      <h3 className="text-2xl font-black text-white">
-                        {activeTab === 'finanzas' ? 'Nuevo Registro' :
-                          activeTab === 'ahorros' ? 'Nueva Inversión' :
-                            activeTab === 'recordatorios' ? 'Nuevo Recordatorio' : 'Operación Comercial'}
-                      </h3>
-                      <button onClick={() => setShowAddModal(false)} className="p-2 text-gray-500 hover:text-white"><PlusCircle className="w-6 h-6 rotate-45" /></button>
+          showAddModal && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="bg-dark-card w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 border-t border-dark-border shadow-2xl animate-in slide-in-from-bottom-full duration-500 overflow-y-auto max-h-[90vh]">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black text-white">
+                    {activeTab === 'finanzas' ? 'Nuevo Registro' :
+                      activeTab === 'ahorros' ? 'Nueva Inversión' :
+                        activeTab === 'recordatorios' ? 'Nuevo Recordatorio' : 'Operación Comercial'}
+                  </h3>
+                  <button onClick={() => setShowAddModal(false)} className="p-2 text-gray-500 hover:text-white"><PlusCircle className="w-6 h-6 rotate-45" /></button>
+                </div>
+
+                {/* FINANZAS FORM (Default) */}
+                {activeTab === 'finanzas' && (
+                  <>
+                    {/* OCR Fast Action */}
+                    <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                          <Camera className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Carga Inteligente</p>
+                          <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
+                        </div>
+                      </div>
+                      <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
+                        Subir
+                        <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
+                      </label>
                     </div>
 
-                    {/* FINANZAS FORM (Default) */}
-                    {activeTab === 'finanzas' && (
-                      <>
-                        {/* OCR Fast Action */}
-                        <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                              <Camera className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-white">Carga Inteligente</p>
-                              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
-                            </div>
-                          </div>
-                          <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
-                            Subir
-                            <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
-                          </label>
-                        </div>
-
-                        {/* Uploaded Images Preview */}
-                        {uploadedImages.length > 0 && (
-                          <div className="mb-6 space-y-3">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
-                            <div className="grid grid-cols-2 gap-3">
-                              {uploadedImages.map((img, index) => (
-                                <div key={index} className="relative group">
-                                  <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
-                                    {img.file.type.startsWith('image/') ? (
-                                      <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center">
-                                        <FileText className="w-8 h-8 text-primary" />
-                                      </div>
-                                    )}
+                    {/* Uploaded Images Preview */}
+                    {uploadedImages.length > 0 && (
+                      <div className="mb-6 space-y-3">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {uploadedImages.map((img, index) => (
+                            <div key={index} className="relative group">
+                              <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
+                                {img.file.type.startsWith('image/') ? (
+                                  <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <FileText className="w-8 h-8 text-primary" />
                                   </div>
-                                  <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => removeImage(index)} className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all">
-                                      <Trash2 className="w-3 h-3" /> Delete
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-6">
-                          <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
-                            <button onClick={() => setTransactionType('gasto')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
-                            <button onClick={() => setTransactionType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Ingreso</button>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
-                              <div className="relative group">
-                                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                                )}
+                              </div>
+                              <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => removeImage(index)} className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all">
+                                  <Trash2 className="w-3 h-3" /> Delete
+                                </button>
                               </div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                                <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                  <option value="">Seleccionar</option>
-                                  {dynamicCategories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                                </select>
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
-                                <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                  <option value="pendiente">Pendiente</option>
-                                  <option value="pagado">Pagado</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
-                              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="¿En qué gastaste?" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                            </div>
-                          </div>
-
-                          <button onClick={() => { addTransaction(); setShowAddModal(false); }} disabled={isOCRProcessing} className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                            {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
-                          </button>
+                          ))}
                         </div>
-                      </>
-                    )}
-
-                    {/* AHORROS FORM */}
-                    {activeTab === 'ahorros' && (
-                      <div className="space-y-6">
-                        <div className="bg-dark/40 p-4 rounded-2xl border border-dark-border mb-4">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
-                          <div className="flex items-center gap-4 mt-2">
-                            <input
-                              type="text"
-                              value={annualRate === 0 ? "" : (annualRate * 100).toString()}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === "") {
-                                  setAnnualRate(0);
-                                } else {
-                                  const parsed = parseFloat(val);
-                                  if (!isNaN(parsed)) setAnnualRate(parsed / 100);
-                                }
-                              }}
-                              className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
-                            />
-                            <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Invertir</label>
-                            <div className="relative group">
-                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                              <input type="number" value={savingAmount} onChange={(e) => setSavingAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre de la Inversión</label>
-                            <input type="text" value={savingName} onChange={(e) => setSavingName(e.target.value)} placeholder="Ej. Depósito a Plazo, Acciones..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Inicio</label>
-                            <input type="date" value={savingDate} onChange={(e) => setSavingDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
-                          </div>
-                        </div>
-
-                        <button onClick={() => { addSaving(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                          Guardar Inversión
-                        </button>
                       </div>
                     )}
 
-                    {/* RECORDATORIOS FORM */}
-                    {activeTab === 'recordatorios' && (
-                      <div className="space-y-6">
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
-                            <div className="relative group">
-                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                              <input type="text" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre del Servicio/Pago</label>
-                            <input type="text" value={reminderName} onChange={(e) => setReminderName(e.target.value)} placeholder="Ej. Tarjeta de Crédito, Luz..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                              <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                <option value="">Seleccionar</option>
-                                {dynamicCategories.reminder.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                              </select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Frecuencia</label>
-                              <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                <option value="unica">Única vez</option>
-                                <option value="mensual">Mensual</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Vencimiento</label>
-                            <input type="date" value={reminderDueDate} onChange={(e) => setReminderDueDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
-                          </div>
-                        </div>
-
-                        <button onClick={() => { addReminder(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                          Crear Recordatorio
-                        </button>
+                    <div className="space-y-6">
+                      <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                        <button onClick={() => setTransactionType('gasto')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                        <button onClick={() => setTransactionType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Ingreso</button>
                       </div>
-                    )}
 
-                    {/* EMPRESA FORM */}
-                    {activeTab === 'empresa' && (
-                      <div className="space-y-6">
-                        <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
-                          <button onClick={() => setBusinessType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Venta</button>
-                          <button onClick={() => setBusinessType('egreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'egreso' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
-                            <div className="relative group">
-                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                              <input type="text" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                              <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                <option value="">Seleccionar</option>
-                                {dynamicCategories[businessType === 'ingreso' ? 'business_ingreso' : 'business_egreso'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                              </select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
-                              <select value={businessStatus} onChange={(e) => setBusinessStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                                <option value="pendiente">Pendiente</option>
-                                <option value="pagado">Pagado</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Cliente / Proveedor</label>
-                            <input type="text" value={businessClient} onChange={(e) => setBusinessClient(e.target.value)} placeholder="Nombre del cliente o proveedor" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Número de Factura (Opcional)</label>
-                            <input type="text" value={businessInvoice} onChange={(e) => setBusinessInvoice(e.target.value)} placeholder="#000000" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Detalles</label>
-                            <input type="text" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)} placeholder="Descripción de la operación" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
+                          <div className="relative group">
+                            <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
                           </div>
                         </div>
 
-                        <button onClick={() => { addBusinessTransaction(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                          Registrar Operación
-                        </button>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                              <option value="">Seleccionar</option>
+                              {dynamicCategories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                              <option value="pendiente">Pendiente</option>
+                              <option value="pagado">Pagado</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
+                          <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="¿En qué gastaste?" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                        </div>
                       </div>
-                    )}
+
+                      <button onClick={() => { addTransaction(); setShowAddModal(false); }} disabled={isOCRProcessing} className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                        {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* AHORROS FORM */}
+                {activeTab === 'ahorros' && (
+                  <div className="space-y-6">
+                    <div className="bg-dark/40 p-4 rounded-2xl border border-dark-border mb-4">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
+                      <div className="flex items-center gap-4 mt-2">
+                        <input
+                          type="text"
+                          value={annualRate === 0 ? "" : (annualRate * 100).toString()}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "") {
+                              setAnnualRate(0);
+                            } else {
+                              const parsed = parseFloat(val);
+                              if (!isNaN(parsed)) setAnnualRate(parsed / 100);
+                            }
+                          }}
+                          className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
+                        />
+                        <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Invertir</label>
+                        <div className="relative group">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                          <input type="number" value={savingAmount} onChange={(e) => setSavingAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre de la Inversión</label>
+                        <input type="text" value={savingName} onChange={(e) => setSavingName(e.target.value)} placeholder="Ej. Depósito a Plazo, Acciones..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Inicio</label>
+                        <input type="date" value={savingDate} onChange={(e) => setSavingDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
+                      </div>
+                    </div>
+
+                    <button onClick={() => { addSaving(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                      Guardar Inversión
+                    </button>
                   </div>
-                </div>
-              )
-            }
+                )}
 
-            {/* OCR Processing Overlay */}
-            {
-              isOCRProcessing && (
-                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-dark/80 backdrop-blur-md animate-in fade-in duration-300">
-                  <div className="relative w-24 h-24 mb-6">
-                    <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-25"></div>
-                    <div className="absolute inset-2 border-4 border-primary rounded-full animate-pulse"></div>
-                    <Camera className="absolute inset-0 m-auto w-10 h-10 text-primary animate-bounce" />
+                {/* RECORDATORIOS FORM */}
+                {activeTab === 'recordatorios' && (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
+                        <div className="relative group">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                          <input type="text" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre del Servicio/Pago</label>
+                        <input type="text" value={reminderName} onChange={(e) => setReminderName(e.target.value)} placeholder="Ej. Tarjeta de Crédito, Luz..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                          <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="">Seleccionar</option>
+                            {dynamicCategories.reminder.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Frecuencia</label>
+                          <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="unica">Única vez</option>
+                            <option value="mensual">Mensual</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Vencimiento</label>
+                        <input type="date" value={reminderDueDate} onChange={(e) => setReminderDueDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
+                      </div>
+                    </div>
+
+                    <button onClick={() => { addReminder(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                      Crear Recordatorio
+                    </button>
                   </div>
-                  <p className="text-xl font-black text-white tracking-[0.3em] uppercase animate-pulse">Analizando Recibo</p>
-                  <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">Extrayendo datos con IA...</p>
-                </div>
-              )
-            }
-          </div>
-        </div>
+                )}
+
+                {/* EMPRESA FORM */}
+                {activeTab === 'empresa' && (
+                  <div className="space-y-6">
+                    <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                      <button onClick={() => setBusinessType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Venta</button>
+                      <button onClick={() => setBusinessType('egreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'egreso' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
+                        <div className="relative group">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                          <input type="text" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                          <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="">Seleccionar</option>
+                            {dynamicCategories[businessType === 'ingreso' ? 'business_ingreso' : 'business_egreso'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                          <select value={businessStatus} onChange={(e) => setBusinessStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pagado">Pagado</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Cliente / Proveedor</label>
+                        <input type="text" value={businessClient} onChange={(e) => setBusinessClient(e.target.value)} placeholder="Nombre del cliente o proveedor" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Número de Factura (Opcional)</label>
+                        <input type="text" value={businessInvoice} onChange={(e) => setBusinessInvoice(e.target.value)} placeholder="#000000" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Detalles</label>
+                        <input type="text" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)} placeholder="Descripción de la operación" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                      </div>
+                    </div>
+
+                    <button onClick={() => { addBusinessTransaction(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                      Registrar Operación
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
+
+        {/* OCR Processing Overlay */}
+        {
+          isOCRProcessing && (
+            <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-dark/80 backdrop-blur-md animate-in fade-in duration-300">
+              <div className="relative w-24 h-24 mb-6">
+                <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-25"></div>
+                <div className="absolute inset-2 border-4 border-primary rounded-full animate-pulse"></div>
+                <Camera className="absolute inset-0 m-auto w-10 h-10 text-primary animate-bounce" />
+              </div>
+              <p className="text-xl font-black text-white tracking-[0.3em] uppercase animate-pulse">Analizando Recibo</p>
+              <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">Extrayendo datos con IA...</p>
+            </div>
+          )
+        }
+      </div>
     </div>
-    </div >
+
   );
 }
