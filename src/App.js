@@ -532,6 +532,9 @@ export default function FinanceTracker() {
 
       if (transactionError) throw transactionError;
 
+      await fetchReminders();
+      await fetchTransactions();
+
       setReminderName('');
       setReminderAmount('');
       setReminderDueDate('');
@@ -771,6 +774,8 @@ export default function FinanceTracker() {
 
       if (error) throw error;
 
+      await fetchTransactions(); // Update list immediately
+
       setAmount('');
       setCategory('');
       setDescription('');
@@ -852,6 +857,8 @@ export default function FinanceTracker() {
       });
 
       if (error) throw error;
+
+      await fetchSavings();
 
       setSavingName('');
       setSavingAmount('');
@@ -1081,6 +1088,8 @@ export default function FinanceTracker() {
       });
 
       if (error) throw error;
+
+      await fetchBusinessTransactions();
 
       setBusinessAmount('');
       setBusinessCategory('');
@@ -2204,8 +2213,9 @@ export default function FinanceTracker() {
                     <div className="flex items-center gap-4 mt-2">
                       <input
                         type="number"
-                        value={(annualRate * 100).toFixed(1)}
-                        onChange={(e) => setAnnualRate(parseFloat(e.target.value) / 100)}
+                        step="0.01"
+                        value={annualRate * 100}
+                        onChange={(e) => setAnnualRate(Number(e.target.value) / 100)}
                         className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
                       />
                       <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
