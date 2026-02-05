@@ -153,12 +153,23 @@ export default function FinanceTracker() {
     }));
   };
 
+  const editCategory = (type, oldName, newName) => {
+    if (!newName.trim() || oldName === newName) return;
+    setDynamicCategories(prev => ({
+      ...prev,
+      [type]: prev[type].map(cat => cat === oldName ? newName.trim() : cat)
+    }));
+  };
+
   const deleteCategory = (type, name) => {
     setDynamicCategories(prev => ({
       ...prev,
       [type]: prev[type].filter(cat => cat !== name)
     }));
   };
+
+  const [editingCategory, setEditingCategory] = useState(null); // { type, name }
+  const [editCategoryInputValue, setEditCategoryInputValue] = useState('');
 
 
 
@@ -194,10 +205,12 @@ export default function FinanceTracker() {
         e.preventDefault();
         setInstallPrompt(e);
       });
-      const isBusinessAccount = user.email === BUSINESS_AUTHORIZED_EMAIL;
-      setShowSavingsModule(AUTHORIZED_EMAILS.includes(user.email) && !isBusinessAccount);
+      const isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
+      const isBusinessAuthorized = user.email === BUSINESS_AUTHORIZED_EMAIL;
+
+      setShowSavingsModule(isAuthorized && !isBusinessAuthorized);
       setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
-      setShowBusinessModule(isBusinessAccount);
+      setShowBusinessModule(isBusinessAuthorized || user.email === 'carlosdaniel092015@gmail.com'); // Allow main user to see business too
 
       if (isBusinessAccount) {
         setActiveTab('empresa');
@@ -1068,7 +1081,7 @@ export default function FinanceTracker() {
           new Date(t.date).toLocaleDateString(),
           t.type === 'ingreso' ? 'Venta' : 'Costo',
           t.category,
-          t.businessClient || '-',
+          t.client_name || '-',
           t.status === 'pagado' ? 'Pagado' : 'Pendiente',
           formatCurrency(t.amount)
         ]),
@@ -1184,8 +1197,8 @@ export default function FinanceTracker() {
         amount: numericAmount,
         category: businessCategory,
         description: businessDescription,
-        businessClient: businessClient,
-        businessInvoice: businessInvoice,
+        client_name: businessClient,
+        invoice_number: businessInvoice,
         status: businessStatus,
         date: new Date().toISOString()
       });
@@ -2136,7 +2149,7 @@ export default function FinanceTracker() {
                         <h2 className="text-3xl font-black text-white">{formatCurrency(businessBalance)}</h2>
                       </div>
                       <div className="bg-primary/20 p-4 rounded-2xl">
-                        <Settings className="w-6 h-6 text-primary" />
+                        <Briefcase className="w-6 h-6 text-primary" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -2147,65 +2160,6 @@ export default function FinanceTracker() {
                       <div className="bg-dark/40 rounded-2xl p-4 border border-dark-border">
                         <p className="text-gray-400 text-[10px] font-bold uppercase mb-1">Costos</p>
                         <p className="text-lg font-bold text-expense">{formatCurrency(totalBusinessExpense)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Category Management */}
-                <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-primary/10 rounded-2xl">
-                      <Layout className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-white">Gestionar Categorías</h3>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Personaliza tus filtros</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.keys(dynamicCategories).map(type => (
-                        <button
-                          key={type}
-                          onClick={() => setCategoryEditType(type)}
-                          className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${categoryEditType === type ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-dark/40 text-gray-500 border border-dark-border'}`}
-                        >
-                          {type === 'gasto' ? 'Gasto Pers.' :
-                            type === 'ingreso' ? 'Ingreso Pers.' :
-                              type === 'business_ingreso' ? 'Ventas Neg.' :
-                                type === 'business_egreso' ? 'Costos Neg.' : 'Avisos'}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="Nueva categoría..."
-                          className="flex-1 bg-dark/50 border border-dark-border rounded-xl py-3 px-4 text-xs font-bold focus:border-primary outline-none text-white"
-                        />
-                        <button
-                          onClick={() => { addCategory(categoryEditType, newCategoryName); setNewCategoryName(''); }}
-                          className="bg-primary hover:bg-blue-600 text-white p-3 rounded-xl transition-all"
-                        >
-                          <PlusCircle className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar pr-1">
-                        {dynamicCategories[categoryEditType].map(cat => (
-                          <div key={cat} className="flex items-center justify-between bg-dark/20 border border-dark-border/30 px-3 py-2 rounded-xl group">
-                            <span className="text-[10px] font-bold text-gray-400 truncate w-24">{cat}</span>
-                            <button onClick={() => deleteCategory(categoryEditType, cat)} className="text-gray-700 hover:text-expense opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
                       </div>
                     </div>
                   </div>
@@ -2232,7 +2186,8 @@ export default function FinanceTracker() {
                               <p className={`text-[8px] uppercase font-black px-1.5 py-0.5 rounded ${t.status === 'pagado' ? 'bg-income/20 text-income' : 'bg-yellow-500/20 text-yellow-500'}`}>
                                 {t.status}
                               </p>
-                              {t.client && <p className="text-[8px] text-gray-600 font-bold uppercase">{t.client}</p>}
+                              {t.client_name && <p className="text-[8px] text-gray-600 font-bold uppercase">{t.client_name}</p>}
+                              {t.invoice_number && <p className="text-[8px] text-gray-700 font-medium italic">#{t.invoice_number}</p>}
                             </div>
                           </div>
                         </div>
@@ -2256,401 +2211,508 @@ export default function FinanceTracker() {
                     ))
                   )}
                 </div>
-              </div>
-            );
-          })()
-        ) : null}
-      </div>
+                )
+            })()
+                ) : activeTab === 'categorias' ? (
+                <div className="space-y-6">
+                  <div className="bg-dark-card rounded-3xl p-6 border border-dark-border shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 transition-colors"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-primary/10 rounded-2xl">
+                          <Tags className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-white">Centro de Categorías</h3>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Personaliza tu organización</p>
+                        </div>
+                      </div>
 
-      {/* Notification Center Modal */}
-      {showNotificationConfig && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-end p-4 sm:p-6 animate-in fade-in duration-200">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationConfig(false)} />
-          <div className="relative w-full max-w-sm bg-dark-card border border-dark-border rounded-3xl p-6 shadow-2xl animate-in slide-in-from-top-10 duration-300 mt-12 mr-0 sm:mr-4">
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-2 overflow-x-auto no-scrollbar pb-2">
+                          {Object.keys(dynamicCategories).map(type => (
+                            <button
+                              key={type}
+                              onClick={() => { setCategoryEditType(type); setEditingCategory(null); }}
+                              className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all px-2 whitespace-nowrap ${categoryEditType === type ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-dark/40 text-gray-500 border border-dark-border'}`}
+                            >
+                              {type === 'gasto' ? 'Gasto Per.' :
+                                type === 'ingreso' ? 'Ingreso Per.' :
+                                  type === 'business_ingreso' ? 'Venta Neg.' :
+                                    type === 'business_egreso' ? 'Costo Neg.' : 'Avisos'}
+                            </button>
+                          ))}
+                        </div>
 
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-2xl">
-                  <Bell className="w-6 h-6 text-primary" />
+                        {/* Add/Edit Input */}
+                        <div className="bg-dark/50 rounded-2xl p-4 border border-dark-border">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 block">
+                            {editingCategory ? `Editando: ${editingCategory.name}` : 'Nueva Categoría'}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editingCategory ? editCategoryInputValue : newCategoryName}
+                              onChange={(e) => editingCategory ? setEditCategoryInputValue(e.target.value) : setNewCategoryName(e.target.value)}
+                              placeholder={editingCategory ? "Nuevo nombre..." : "Ej. Transporte, Ventas..."}
+                              className="flex-1 bg-dark-card border border-dark-border rounded-xl py-3 px-4 text-sm font-bold focus:border-primary outline-none text-white transition-all"
+                            />
+                            {editingCategory ? (
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => { editCategory(categoryEditType, editingCategory.name, editCategoryInputValue); setEditingCategory(null); setEditCategoryInputValue(''); }}
+                                  className="bg-income hover:bg-green-600 text-white p-3 rounded-xl transition-all shadow-lg shadow-income/20"
+                                >
+                                  <CheckCircle2 className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => { setEditingCategory(null); setEditCategoryInputValue(''); }}
+                                  className="bg-dark border border-dark-border text-gray-500 p-3 rounded-xl hover:text-white transition-all"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { addCategory(categoryEditType, newCategoryName); setNewCategoryName(''); }}
+                                className="bg-primary hover:bg-blue-600 text-white p-3 rounded-xl transition-all shadow-lg shadow-primary/20"
+                              >
+                                <PlusCircle className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Category List */}
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar pb-10">
+                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2">Existentes ({dynamicCategories[categoryEditType].length})</h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {dynamicCategories[categoryEditType].map(cat => (
+                              <div key={cat} className="flex items-center justify-between bg-dark/40 border border-dark-border rounded-2xl px-4 py-3 group hover:border-primary/50 transition-all">
+                                <span className="text-sm font-bold text-white">{cat}</span>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => { setEditingCategory({ type: categoryEditType, name: cat }); setEditCategoryInputValue(cat); }}
+                                    className="p-2 text-gray-500 hover:text-primary transition-colors hover:bg-primary/10 rounded-lg"
+                                  >
+                                    <Settings className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteCategory(categoryEditType, cat)}
+                                    className="p-2 text-gray-700 hover:text-expense transition-colors hover:bg-expense/10 rounded-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-white text-lg">Notificaciones</h3>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest">Avisos de pagos</p>
-                </div>
+              ) : null}
               </div>
-              <button onClick={() => setShowNotificationConfig(false)} className="p-2 text-gray-500 hover:text-white transition">
-                <X className="w-5 h-5" />
+
+                {/* Notification Center Modal */ }
+            {
+              showNotificationConfig && (
+                <div className="fixed inset-0 z-[100] flex items-start justify-end p-4 sm:p-6 animate-in fade-in duration-200">
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowNotificationConfig(false)} />
+                  <div className="relative w-full max-w-sm bg-dark-card border border-dark-border rounded-3xl p-6 shadow-2xl animate-in slide-in-from-top-10 duration-300 mt-12 mr-0 sm:mr-4">
+
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-primary/10 rounded-2xl">
+                          <Bell className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg">Notificaciones</h3>
+                          <p className="text-[10px] text-gray-500 uppercase tracking-widest">Avisos de pagos</p>
+                        </div>
+                      </div>
+                      <button onClick={() => setShowNotificationConfig(false)} className="p-2 text-gray-500 hover:text-white transition">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {/* Permission Status */}
+                      <div className="bg-dark/50 rounded-2xl p-4 border border-dark-border/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold text-gray-400 uppercase">Estado</span>
+                          <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${notificationsEnabled === 'granted' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'
+                            }`}>
+                            {notificationsEnabled === 'granted' ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                        {notificationsEnabled !== 'granted' && (
+                          <button
+                            onClick={requestNotificationPermission}
+                            className="w-full mt-2 bg-primary hover:bg-blue-600 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                          >
+                            Activar Avisos
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Upcoming Alerts Preview */}
+                      <div>
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Próximos Vencimientos</h4>
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                          {reminders.filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7).length === 0 ? (
+                            <p className="text-center text-gray-600 text-xs py-4 italic">Todo al día</p>
+                          ) : (
+                            reminders
+                              .filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7)
+                              .map(r => {
+                                const days = getDaysUntilDue(r.dueDate);
+                                return (
+                                  <div key={r.id} className="flex items-center justify-between p-3 bg-dark/30 rounded-xl border border-dark-border/30">
+                                    <div>
+                                      <p className="text-white text-xs font-bold">{r.name}</p>
+                                      <p className={`text-[9px] font-black uppercase ${days < 0 ? 'text-expense' : 'text-yellow-500'}`}>
+                                        {days < 0 ? `Venció hace ${Math.abs(days)} días` : `Vence en ${days} días`}
+                                      </p>
+                                    </div>
+                                    <span className="text-white text-xs font-mono font-bold">{formatCurrency(r.amount)}</span>
+                                  </div>
+                                )
+                              })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )
+            }
+
+            {/* Modern Contextual Bottom Navigation */ }
+            <div className="fixed bottom-0 left-0 right-0 bg-dark-card/90 backdrop-blur-xl border-t border-dark-border z-50 px-6 pb-6 pt-3 flex justify-between items-center max-w-md mx-auto">
+              <button
+                onClick={() => setActiveTab('finanzas')}
+                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'finanzas' ? 'text-primary scale-110' : 'text-gray-500'}`}
+              >
+                <Layout className="w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Panel</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('ahorros')}
+                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'ahorros' ? 'text-primary scale-110' : 'text-gray-500'}`}
+              >
+                <PiggyBank className="w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Ahorros</span>
+              </button>
+
+              {/* Floating Add Button */}
+              <div className="relative -mt-12">
+                <button
+                  onClick={() => setShowAddModal(!showAddModal)}
+                  className={`w-14 h-14 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${showAddModal ? 'bg-expense rotate-45' : 'bg-primary'
+                    }`}
+                >
+                  <PlusCircle className="w-8 h-8 text-white" />
+                </button>
+              </div>
+
+              <button
+                onClick={() => setActiveTab('recordatorios')}
+                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'recordatorios' ? 'text-primary scale-110' : 'text-gray-500'}`}
+              >
+                <Clock className="w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Avisos</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('empresa')}
+                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'empresa' ? 'text-primary scale-110' : 'text-gray-500'}`}
+              >
+                <Briefcase className="w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Empresa</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('categorias')}
+                className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'categorias' ? 'text-primary scale-110' : 'text-gray-500'}`}
+              >
+                <Tags className="w-6 h-6" />
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Categorías</span>
               </button>
             </div>
 
-            <div className="space-y-6">
-              {/* Permission Status */}
-              <div className="bg-dark/50 rounded-2xl p-4 border border-dark-border/50">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-gray-400 uppercase">Estado</span>
-                  <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${notificationsEnabled === 'granted' ? 'bg-income/20 text-income' : 'bg-expense/20 text-expense'
-                    }`}>
-                    {notificationsEnabled === 'granted' ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-                {notificationsEnabled !== 'granted' && (
-                  <button
-                    onClick={requestNotificationPermission}
-                    className="w-full mt-2 bg-primary hover:bg-blue-600 text-white py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
-                  >
-                    Activar Avisos
-                  </button>
-                )}
-              </div>
+            {/* Premium Add Modal with OCR */ }
+            {
 
-              {/* Upcoming Alerts Preview */}
-              <div>
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Próximos Vencimientos</h4>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
-                  {reminders.filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7).length === 0 ? (
-                    <p className="text-center text-gray-600 text-xs py-4 italic">Todo al día</p>
-                  ) : (
-                    reminders
-                      .filter(r => r.status === 'pendiente' && getDaysUntilDue(r.dueDate) <= 7)
-                      .map(r => {
-                        const days = getDaysUntilDue(r.dueDate);
-                        return (
-                          <div key={r.id} className="flex items-center justify-between p-3 bg-dark/30 rounded-xl border border-dark-border/30">
+              showAddModal && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                  <div className="bg-dark-card w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 border-t border-dark-border shadow-2xl animate-in slide-in-from-bottom-full duration-500 overflow-y-auto max-h-[90vh]">
+                    <div className="flex justify-between items-center mb-8">
+                      <h3 className="text-2xl font-black text-white">
+                        {activeTab === 'finanzas' ? 'Nuevo Registro' :
+                          activeTab === 'ahorros' ? 'Nueva Inversión' :
+                            activeTab === 'recordatorios' ? 'Nuevo Recordatorio' : 'Operación Comercial'}
+                      </h3>
+                      <button onClick={() => setShowAddModal(false)} className="p-2 text-gray-500 hover:text-white"><PlusCircle className="w-6 h-6 rotate-45" /></button>
+                    </div>
+
+                    {/* FINANZAS FORM (Default) */}
+                    {activeTab === 'finanzas' && (
+                      <>
+                        {/* OCR Fast Action */}
+                        <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                              <Camera className="w-6 h-6 text-white" />
+                            </div>
                             <div>
-                              <p className="text-white text-xs font-bold">{r.name}</p>
-                              <p className={`text-[9px] font-black uppercase ${days < 0 ? 'text-expense' : 'text-yellow-500'}`}>
-                                {days < 0 ? `Venció hace ${Math.abs(days)} días` : `Vence en ${days} días`}
-                              </p>
+                              <p className="text-sm font-bold text-white">Carga Inteligente</p>
+                              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
                             </div>
-                            <span className="text-white text-xs font-mono font-bold">{formatCurrency(r.amount)}</span>
                           </div>
-                        )
-                      })
-                  )}
-                </div>
-              </div>
-            </div>
+                          <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
+                            Subir
+                            <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
+                          </label>
+                        </div>
 
-          </div>
-        </div>
-      )}
-
-      {/* Modern Contextual Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-dark-card/90 backdrop-blur-xl border-t border-dark-border z-50 px-6 pb-6 pt-3 flex justify-between items-center max-w-md mx-auto">
-        <button
-          onClick={() => setActiveTab('finanzas')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'finanzas' ? 'text-primary scale-110' : 'text-gray-500'}`}
-        >
-          <Layout className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Panel</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('ahorros')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'ahorros' ? 'text-primary scale-110' : 'text-gray-500'}`}
-        >
-          <PiggyBank className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Ahorros</span>
-        </button>
-
-        {/* Floating Add Button */}
-        <div className="relative -mt-12">
-          <button
-            onClick={() => setShowAddModal(!showAddModal)}
-            className={`w-14 h-14 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.5)] flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${showAddModal ? 'bg-expense rotate-45' : 'bg-primary'
-              }`}
-          >
-            <PlusCircle className="w-8 h-8 text-white" />
-          </button>
-        </div>
-
-        <button
-          onClick={() => setActiveTab('recordatorios')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'recordatorios' ? 'text-primary scale-110' : 'text-gray-500'}`}
-        >
-          <Clock className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Avisos</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('empresa')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'empresa' ? 'text-primary scale-110' : 'text-gray-500'}`}
-        >
-          <Settings className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">Ajustes</span>
-        </button>
-      </div>
-
-      {/* Premium Add Modal with OCR */}
-      {
-
-        showAddModal && (
-          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-dark-card w-full max-w-md rounded-t-[40px] sm:rounded-[40px] p-8 border-t border-dark-border shadow-2xl animate-in slide-in-from-bottom-full duration-500 overflow-y-auto max-h-[90vh]">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-2xl font-black text-white">
-                  {activeTab === 'finanzas' ? 'Nuevo Registro' :
-                    activeTab === 'ahorros' ? 'Nueva Inversión' :
-                      activeTab === 'recordatorios' ? 'Nuevo Recordatorio' : 'Operación Comercial'}
-                </h3>
-                <button onClick={() => setShowAddModal(false)} className="p-2 text-gray-500 hover:text-white"><PlusCircle className="w-6 h-6 rotate-45" /></button>
-              </div>
-
-              {/* FINANZAS FORM (Default) */}
-              {activeTab === 'finanzas' && (
-                <>
-                  {/* OCR Fast Action */}
-                  <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 mb-6 flex items-center justify-between group active:scale-[0.98] transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                        <Camera className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">Carga Inteligente</p>
-                        <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Foto de recibo o PDF</p>
-                      </div>
-                    </div>
-                    <label className="cursor-pointer bg-primary/20 text-primary px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-primary transition-all hover:text-white">
-                      Subir
-                      <input type="file" multiple className="hidden" accept="image/*,application/pdf" onChange={handleOCRFile} />
-                    </label>
-                  </div>
-
-                  {/* Uploaded Images Preview */}
-                  {uploadedImages.length > 0 && (
-                    <div className="mb-6 space-y-3">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {uploadedImages.map((img, index) => (
-                          <div key={index} className="relative group">
-                            <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
-                              {img.file.type.startsWith('image/') ? (
-                                <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <FileText className="w-8 h-8 text-primary" />
+                        {/* Uploaded Images Preview */}
+                        {uploadedImages.length > 0 && (
+                          <div className="mb-6 space-y-3">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Archivos Adjuntos</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {uploadedImages.map((img, index) => (
+                                <div key={index} className="relative group">
+                                  <div className="aspect-video bg-dark/50 rounded-2xl overflow-hidden border border-dark-border">
+                                    {img.file.type.startsWith('image/') ? (
+                                      <img src={img.preview} alt={`Receipt ${index + 1}`} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <FileText className="w-8 h-8 text-primary" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => removeImage(index)} className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all">
+                                      <Trash2 className="w-3 h-3" /> Delete
+                                    </button>
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                            <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => removeImage(index)} className="flex-1 bg-expense/90 backdrop-blur-sm text-white px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase flex items-center justify-center gap-1 hover:bg-expense transition-all">
-                                <Trash2 className="w-3 h-3" /> Delete
-                              </button>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        )}
 
-                  <div className="space-y-6">
-                    <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
-                      <button onClick={() => setTransactionType('gasto')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
-                      <button onClick={() => setTransactionType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Ingreso</button>
-                    </div>
+                        <div className="space-y-6">
+                          <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                            <button onClick={() => setTransactionType('gasto')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'gasto' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                            <button onClick={() => setTransactionType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${transactionType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Ingreso</button>
+                          </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
-                        <div className="relative group">
-                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto Total</label>
+                              <div className="relative group">
+                                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                                <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                                <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                  <option value="">Seleccionar</option>
+                                  {dynamicCategories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                                <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                  <option value="pendiente">Pendiente</option>
+                                  <option value="pagado">Pagado</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
+                              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="¿En qué gastaste?" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                            </div>
+                          </div>
+
+                          <button onClick={() => { addTransaction(); setShowAddModal(false); }} disabled={isOCRProcessing} className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                            {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
+                          </button>
                         </div>
-                      </div>
+                      </>
+                    )}
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                            <option value="">Seleccionar</option>
-                            {dynamicCategories[transactionType].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                          </select>
+                    {/* AHORROS FORM */}
+                    {activeTab === 'ahorros' && (
+                      <div className="space-y-6">
+                        <div className="bg-dark/40 p-4 rounded-2xl border border-dark-border mb-4">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
+                          <div className="flex items-center gap-4 mt-2">
+                            <input
+                              type="text"
+                              value={annualRate === 0 ? "" : (annualRate * 100).toString()}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "") {
+                                  setAnnualRate(0);
+                                } else {
+                                  const parsed = parseFloat(val);
+                                  if (!isNaN(parsed)) setAnnualRate(parsed / 100);
+                                }
+                              }}
+                              className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
+                            />
+                            <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
-                          <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                            <option value="pendiente">Pendiente</option>
-                            <option value="pagado">Pagado</option>
-                          </select>
+
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Invertir</label>
+                            <div className="relative group">
+                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                              <input type="number" value={savingAmount} onChange={(e) => setSavingAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre de la Inversión</label>
+                            <input type="text" value={savingName} onChange={(e) => setSavingName(e.target.value)} placeholder="Ej. Depósito a Plazo, Acciones..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Inicio</label>
+                            <input type="date" value={savingDate} onChange={(e) => setSavingDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
+                          </div>
                         </div>
+
+                        <button onClick={() => { addSaving(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                          Guardar Inversión
+                        </button>
                       </div>
+                    )}
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Descripción</label>
-                        <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="¿En qué gastaste?" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                    {/* RECORDATORIOS FORM */}
+                    {activeTab === 'recordatorios' && (
+                      <div className="space-y-6">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
+                            <div className="relative group">
+                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                              <input type="text" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre del Servicio/Pago</label>
+                            <input type="text" value={reminderName} onChange={(e) => setReminderName(e.target.value)} placeholder="Ej. Tarjeta de Crédito, Luz..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                              <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                <option value="">Seleccionar</option>
+                                {dynamicCategories.reminder.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                              </select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Frecuencia</label>
+                              <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                <option value="unica">Única vez</option>
+                                <option value="mensual">Mensual</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Vencimiento</label>
+                            <input type="date" value={reminderDueDate} onChange={(e) => setReminderDueDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
+                          </div>
+                        </div>
+
+                        <button onClick={() => { addReminder(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                          Crear Recordatorio
+                        </button>
                       </div>
-                    </div>
+                    )}
 
-                    <button onClick={() => { addTransaction(); setShowAddModal(false); }} disabled={isOCRProcessing} className="w-full bg-primary hover:bg-blue-600 disabled:bg-gray-700 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                      {isOCRProcessing ? 'Procesando...' : 'Confirmar Registro'}
-                    </button>
-                  </div>
-                </>
-              )}
+                    {/* EMPRESA FORM */}
+                    {activeTab === 'empresa' && (
+                      <div className="space-y-6">
+                        <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
+                          <button onClick={() => setBusinessType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Venta</button>
+                          <button onClick={() => setBusinessType('egreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'egreso' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
+                        </div>
 
-              {/* AHORROS FORM */}
-              {activeTab === 'ahorros' && (
-                <div className="space-y-6">
-                  <div className="bg-dark/40 p-4 rounded-2xl border border-dark-border mb-4">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tasa de Rendimiento Anual (%)</label>
-                    <div className="flex items-center gap-4 mt-2">
-                      <input
-                        type="text"
-                        value={annualRate === 0 ? "" : (annualRate * 100).toString()}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === "") {
-                            setAnnualRate(0);
-                          } else {
-                            const parsed = parseFloat(val);
-                            if (!isNaN(parsed)) setAnnualRate(parsed / 100);
-                          }
-                        }}
-                        className="w-24 bg-dark/50 border border-dark-border rounded-xl py-2 px-3 text-center font-bold text-income focus:border-income outline-none"
-                      />
-                      <p className="text-xs text-gray-500 leading-tight">Ajusta este valor según el rendimiento real de tus inversiones.</p>
-                    </div>
-                  </div>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
+                            <div className="relative group">
+                              <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
+                              <input type="text" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                            </div>
+                          </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Invertir</label>
-                      <div className="relative group">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                        <input type="number" value={savingAmount} onChange={(e) => setSavingAmount(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
+                              <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                <option value="">Seleccionar</option>
+                                {dynamicCategories[businessType === 'ingreso' ? 'business_ingreso' : 'business_egreso'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
+                              </select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
+                              <select value={businessStatus} onChange={(e) => setBusinessStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
+                                <option value="pendiente">Pendiente</option>
+                                <option value="pagado">Pagado</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Cliente / Proveedor</label>
+                            <input type="text" value={businessClient} onChange={(e) => setBusinessClient(e.target.value)} placeholder="Nombre del cliente o proveedor" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Número de Factura (Opcional)</label>
+                            <input type="text" value={businessInvoice} onChange={(e) => setBusinessInvoice(e.target.value)} placeholder="#000000" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Detalles</label>
+                            <input type="text" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)} placeholder="Descripción de la operación" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
+                          </div>
+                        </div>
+
+                        <button onClick={() => { addBusinessTransaction(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
+                          Registrar Operación
+                        </button>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre de la Inversión</label>
-                      <input type="text" value={savingName} onChange={(e) => setSavingName(e.target.value)} placeholder="Ej. Depósito a Plazo, Acciones..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Inicio</label>
-                      <input type="date" value={savingDate} onChange={(e) => setSavingDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
-                    </div>
+                    )}
                   </div>
-
-                  <button onClick={() => { addSaving(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                    Guardar Inversión
-                  </button>
                 </div>
-              )}
+              )
+            }
 
-              {/* RECORDATORIOS FORM */}
-              {activeTab === 'recordatorios' && (
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto a Pagar</label>
-                      <div className="relative group">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                        <input type="text" value={reminderAmount} onChange={(e) => handleReminderAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Nombre del Servicio/Pago</label>
-                      <input type="text" value={reminderName} onChange={(e) => setReminderName(e.target.value)} placeholder="Ej. Tarjeta de Crédito, Luz..." className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                        <select value={reminderCategory} onChange={(e) => setReminderCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                          <option value="">Seleccionar</option>
-                          {dynamicCategories.reminder.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Frecuencia</label>
-                        <select value={reminderFrequency} onChange={(e) => setReminderFrequency(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                          <option value="unica">Única vez</option>
-                          <option value="mensual">Mensual</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Fecha de Vencimiento</label>
-                      <input type="date" value={reminderDueDate} onChange={(e) => setReminderDueDate(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all text-white" />
-                    </div>
+            {/* OCR Processing Overlay */ }
+            {
+              isOCRProcessing && (
+                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-dark/80 backdrop-blur-md animate-in fade-in duration-300">
+                  <div className="relative w-24 h-24 mb-6">
+                    <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-25"></div>
+                    <div className="absolute inset-2 border-4 border-primary rounded-full animate-pulse"></div>
+                    <Camera className="absolute inset-0 m-auto w-10 h-10 text-primary animate-bounce" />
                   </div>
-
-                  <button onClick={() => { addReminder(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                    Crear Recordatorio
-                  </button>
+                  <p className="text-xl font-black text-white tracking-[0.3em] uppercase animate-pulse">Analizando Recibo</p>
+                  <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">Extrayendo datos con IA...</p>
                 </div>
-              )}
-
-              {/* EMPRESA FORM */}
-              {activeTab === 'empresa' && (
-                <div className="space-y-6">
-                  <div className="flex gap-4 p-1 bg-dark/50 rounded-2xl border border-dark-border">
-                    <button onClick={() => setBusinessType('ingreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'ingreso' ? 'bg-income text-white shadow-lg' : 'text-gray-500'}`}>Venta</button>
-                    <button onClick={() => setBusinessType('egreso')} className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${businessType === 'egreso' ? 'bg-expense text-white shadow-lg' : 'text-gray-500'}`}>Gasto</button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Monto de la Operación</label>
-                      <div className="relative group">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary group-focus-within:scale-110 transition-transform" />
-                        <input type="text" value={businessAmount} onChange={(e) => handleBusinessAmountInput(e.target.value)} placeholder="0.00" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 pl-12 pr-4 text-xl font-mono font-bold focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-gray-700" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Categoría</label>
-                        <select value={businessCategory} onChange={(e) => setBusinessCategory(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                          <option value="">Seleccionar</option>
-                          {dynamicCategories[businessType === 'ingreso' ? 'business_ingreso' : 'business_egreso'].map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Estado</label>
-                        <select value={businessStatus} onChange={(e) => setBusinessStatus(e.target.value)} className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none appearance-none cursor-pointer">
-                          <option value="pendiente">Pendiente</option>
-                          <option value="pagado">Pagado</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Cliente / Proveedor</label>
-                      <input type="text" value={businessClient} onChange={(e) => setBusinessClient(e.target.value)} placeholder="Nombre del cliente o proveedor" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Número de Factura (Opcional)</label>
-                      <input type="text" value={businessInvoice} onChange={(e) => setBusinessInvoice(e.target.value)} placeholder="#000000" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-2">Detalles</label>
-                      <input type="text" value={businessDescription} onChange={(e) => setBusinessDescription(e.target.value)} placeholder="Descripción de la operación" className="w-full bg-dark/50 border border-dark-border rounded-2xl py-4 px-4 text-sm font-bold focus:border-primary outline-none transition-all placeholder:text-gray-700" />
-                    </div>
-                  </div>
-
-                  <button onClick={() => { addBusinessTransaction(); setShowAddModal(false); }} className="w-full bg-primary hover:bg-blue-600 text-white rounded-2xl py-5 font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 transition-all mt-4">
-                    Registrar Operación
-                  </button>
-                </div>
-              )}
-            </div>
+              )
+            }
           </div>
-        )
-      }
-
-      {/* OCR Processing Overlay */}
-      {
-        isOCRProcessing && (
-          <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-dark/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="relative w-24 h-24 mb-6">
-              <div className="absolute inset-0 border-4 border-primary rounded-full animate-ping opacity-25"></div>
-              <div className="absolute inset-2 border-4 border-primary rounded-full animate-pulse"></div>
-              <Camera className="absolute inset-0 m-auto w-10 h-10 text-primary animate-bounce" />
-            </div>
-            <p className="text-xl font-black text-white tracking-[0.3em] uppercase animate-pulse">Analizando Recibo</p>
-            <p className="text-gray-500 text-xs mt-2 uppercase tracking-widest">Extrayendo datos con IA...</p>
-          </div>
-        )
-      }
-    </div>
-  );
+      );
 }

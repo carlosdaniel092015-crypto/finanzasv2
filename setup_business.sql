@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS business_transactions (
     amount NUMERIC NOT NULL,
     category TEXT NOT NULL,
     description TEXT,
-    "businessClient" TEXT, -- Matches camelCase used in code
-    "businessInvoice" TEXT, -- Matches camelCase used in code
+    client_name TEXT, -- Updated to snake_case
+    invoice_number TEXT, -- Updated to snake_case
     status TEXT DEFAULT 'pendiente',
     date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -24,6 +24,3 @@ CREATE POLICY "Users can manage their own business transactions"
 ON business_transactions 
 FOR ALL 
 USING (auth.uid() = user_id);
-
--- Note: Categories are currently handled via localStorage for maximum reliability.
--- If you want to sync categories across devices, a categories table would be needed.
