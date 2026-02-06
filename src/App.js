@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, User, Wallet, PiggyBank, Calendar, Layout, PieChart, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, Copy, Bookmark, X, CheckCircle2, Lock, Mail, Briefcase, Tags } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, Wallet, PiggyBank, Calendar, Layout, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, X, CheckCircle2, Lock, Mail, Briefcase, Tags } from 'lucide-react';
 import { supabase } from './supabaseClient';
 import Tesseract from 'tesseract.js';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
+import { Pie, Bar } from 'react-chartjs-2';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
+// import html2canvas from 'html2canvas';
 
 ChartJS.register(
   ArcElement, Tooltip, Legend,
@@ -47,7 +47,7 @@ export default function FinanceTracker() {
 
   const [status, setStatus] = useState('pendiente');
 
-  const [dateFilter, setDateFilter] = useState('mes');
+  // const [dateFilter, setDateFilter] = useState('mes');
 
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -81,9 +81,9 @@ export default function FinanceTracker() {
 
   const [showRemindersModule, setShowRemindersModule] = useState(false);
 
-  const [reminderFilter, setReminderFilter] = useState('todos');
-  const [reminderDateFilter, setReminderDateFilter] = useState('mes');
-  const [reminderSelectedDate, setReminderSelectedDate] = useState(new Date());
+  // const [reminderFilter, setReminderFilter] = useState('todos');
+  // const [reminderDateFilter, setReminderDateFilter] = useState('mes');
+  // const [reminderSelectedDate, setReminderSelectedDate] = useState(new Date());
 
   // Estados para módulo empresarial
   const [showBusinessModule, setShowBusinessModule] = useState(false);
@@ -95,8 +95,8 @@ export default function FinanceTracker() {
   const [businessClient, setBusinessClient] = useState('');
   const [businessInvoice, setBusinessInvoice] = useState('');
   const [businessStatus, setBusinessStatus] = useState('pendiente');
-  const [businessDateFilter, setBusinessDateFilter] = useState('mes');
-  const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
+  // const [businessDateFilter, setBusinessDateFilter] = useState('mes');
+  // const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
 
   // Estados para notificaciones
   const [notificationsEnabled, setNotificationsEnabled] = useState('default');
@@ -188,7 +188,7 @@ export default function FinanceTracker() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [handleUserChange]);
 
   const handleUserChange = (user) => {
     if (user) {
@@ -276,7 +276,7 @@ export default function FinanceTracker() {
       setReminders(mapped);
       checkRemindersAndNotify(mapped);
     }
-  }, [currentUser, showRemindersModule]);
+  }, [currentUser, showRemindersModule, checkRemindersAndNotify]);
 
   useEffect(() => {
     fetchReminders();
@@ -949,6 +949,7 @@ export default function FinanceTracker() {
     return outputArray;
   };
 
+  /*
   const handleInstallClick = async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -957,6 +958,7 @@ export default function FinanceTracker() {
       setInstallPrompt(null);
     }
   };
+  */
 
   const requestNotificationPermission = async () => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) {
@@ -1139,41 +1141,23 @@ export default function FinanceTracker() {
 
 
 
+  /*
   const handleAmountInput = (value) => {
-
     const cleaned = value.replace(/[^\d.]/g, '');
-
     const parts = cleaned.split('.');
-
     if (parts.length > 2) {
-
       return;
-
     }
-
-
-
     let formatted = parts[0];
-
     if (formatted) {
-
       formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
     }
-
-
-
     if (parts.length === 2) {
-
       formatted = formatted + '.' + parts[1].slice(0, 2);
-
     }
-
-
-
     setSavingAmount(formatted);
-
   };
+  */
 
   // Funciones del módulo empresarial
   const addBusinessTransaction = async () => {
@@ -1268,6 +1252,7 @@ export default function FinanceTracker() {
     setBusinessAmount(formatted);
   };
 
+  /*
   const filterBusinessTransactionsByDate = () => {
     const now = new Date(businessSelectedDate);
     return businessTransactions.filter(t => {
@@ -1284,6 +1269,7 @@ export default function FinanceTracker() {
       }
     });
   };
+  */
 
 
   const handleOCRFile = async (e) => {
@@ -1363,7 +1349,12 @@ export default function FinanceTracker() {
       }
 
       const fileName = `${currentUser.id}/${Date.now()}_${img.file.name}`;
-      const { data, error } = await supabase.storage
+      /*
+            const { data, error } = await supabase.storage
+              .from('receipts')
+              .upload(fileName, img.file);
+      */
+      const { error } = await supabase.storage
         .from('receipts')
         .upload(fileName, img.file);
 
@@ -2033,7 +2024,7 @@ export default function FinanceTracker() {
             {/* Reminder Aggregated Stats */}
             {(() => {
               const filteredByDate = filterRemindersByDate();
-              const totalReminders = filteredByDate.length;
+              // const totalReminders = filteredByDate.length;
               const pendingReminders = filteredByDate.filter(r => r.status === 'pendiente');
               const totalPending = pendingReminders.reduce((sum, r) => sum + r.amount, 0);
               const overdue = pendingReminders.filter(r => getDaysUntilDue(r.dueDate) < 0).length;
