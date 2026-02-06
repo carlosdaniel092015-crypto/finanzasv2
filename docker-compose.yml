@@ -6,7 +6,7 @@ services:
       context: .
       args:
         - REACT_APP_SUPABASE_URL=${REACT_APP_SUPABASE_URL}
-        - REACT_APP_SUPABASE_ANON_KEY=${REACT_APP_SUPABASE_ANON_KEY}
+        - REACT_APP_SUPABASE_ANON_ID=${REACT_APP_SUPABASE_ANON_ID}
     ports:
       - "3000:80"
     restart: always
