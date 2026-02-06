@@ -17,6 +17,11 @@ ChartJS.register(
 
 
 
+// Mover constantes fuera del componente para evitar advertencias de dependencias en Hooks
+const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
+const REMINDERS_AUTHORIZED_EMAIL = 'carlosdaniel092015@gmail.com';
+const BUSINESS_AUTHORIZED_EMAIL = 'acentos.decoventas@gmail.com';
+
 export default function FinanceTracker() {
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -103,11 +108,6 @@ export default function FinanceTracker() {
   const [showNotificationConfig, setShowNotificationConfig] = useState(false);
   const [, setInstallPrompt] = useState(null);
 
-  const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
-
-  const REMINDERS_AUTHORIZED_EMAIL = 'carlosdaniel092015@gmail.com';
-
-  const BUSINESS_AUTHORIZED_EMAIL = 'acentos.decoventas@gmail.com';
 
   const [viewMode, setViewMode] = useState('daily'); // daily, calendar, weekly, monthly, summary
   const [isOCRProcessing, setIsOCRProcessing] = useState(false);
@@ -259,6 +259,59 @@ export default function FinanceTracker() {
   }, [fetchSavings]);
 
 
+
+  const getDaysUntilDue = (dueDate) => {
+    if (!dueDate) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Si viene en formato ISO (con T), extraemos solo la parte de la fecha
+    const datePart = dueDate.split('T')[0];
+    const [y, m, d] = datePart.split('-').map(Number);
+    const due = new Date(y, m - 1, d);
+
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const checkRemindersAndNotify = useCallback(async (remindersList) => {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    const registration = await navigator.serviceWorker.ready;
+
+    for (const reminder of remindersList) {
+      if (reminder.status !== 'pendiente') continue;
+
+      const daysUntil = getDaysUntilDue(reminder.dueDate);
+
+      // Notificar una semana antes (daysUntil <= 7) 
+      // y seguir notificando diariamente (si last_notified_at !== todayStr)
+      if (daysUntil <= 7 && reminder.last_notified_at !== todayStr) {
+        const title = daysUntil < 0 ? '¡Pago Vencido!' : '¡Recordatorio de Pago!';
+        const body = daysUntil < 0
+          ? `${reminder.description}: $${formatCurrency(reminder.amount)} venció hace ${Math.abs(daysUntil)} días.`
+          : `${reminder.description}: $${formatCurrency(reminder.amount)} vence en ${daysUntil} días.`;
+
+        await registration.showNotification(title, {
+          body,
+          icon: '/logo192.png',
+          badge: '/logo192.png',
+          vibrate: [200, 100, 200],
+          tag: `reminder-${reminder.id}`, // Evita duplicados en la bandeja
+          renotify: true
+        });
+
+        // Actualizar last_notified_at en Supabase
+        await supabase
+          .from('reminders')
+          .update({ last_notified_at: todayStr })
+          .eq('id', reminder.id);
+      }
+    }
+  }, []);
 
   const fetchReminders = useCallback(async () => {
     if (!currentUser || !showRemindersModule) return;
@@ -608,58 +661,6 @@ export default function FinanceTracker() {
 
 
 
-  const getDaysUntilDue = (dueDate) => {
-    if (!dueDate) return 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Si viene en formato ISO (con T), extraemos solo la parte de la fecha
-    const datePart = dueDate.split('T')[0];
-    const [y, m, d] = datePart.split('-').map(Number);
-    const due = new Date(y, m - 1, d);
-
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const checkRemindersAndNotify = useCallback(async (remindersList) => {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-
-    const todayStr = new Date().toLocaleDateString('en-CA');
-    const registration = await navigator.serviceWorker.ready;
-
-    for (const reminder of remindersList) {
-      if (reminder.status !== 'pendiente') continue;
-
-      const daysUntil = getDaysUntilDue(reminder.dueDate);
-
-      // Notificar una semana antes (daysUntil <= 7) 
-      // y seguir notificando diariamente (si last_notified_at !== todayStr)
-      if (daysUntil <= 7 && reminder.last_notified_at !== todayStr) {
-        const title = daysUntil < 0 ? '¡Pago Vencido!' : '¡Recordatorio de Pago!';
-        const body = daysUntil < 0
-          ? `${reminder.description}: $${formatCurrency(reminder.amount)} venció hace ${Math.abs(daysUntil)} días.`
-          : `${reminder.description}: $${formatCurrency(reminder.amount)} vence en ${daysUntil} días.`;
-
-        await registration.showNotification(title, {
-          body,
-          icon: '/logo192.png',
-          badge: '/logo192.png',
-          vibrate: [200, 100, 200],
-          tag: `reminder-${reminder.id}`, // Evita duplicados en la bandeja
-          renotify: true
-        });
-
-        // Actualizar last_notified_at en Supabase
-        await supabase
-          .from('reminders')
-          .update({ last_notified_at: todayStr })
-          .eq('id', reminder.id);
-      }
-    }
-  }, []);
 
 
 
