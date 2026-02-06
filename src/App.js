@@ -81,9 +81,9 @@ export default function FinanceTracker() {
 
   const [showRemindersModule, setShowRemindersModule] = useState(false);
 
-  // const [reminderFilter, setReminderFilter] = useState('todos');
-  // const [reminderDateFilter, setReminderDateFilter] = useState('mes');
-  // const [reminderSelectedDate, setReminderSelectedDate] = useState(new Date());
+  const [reminderFilter, setReminderFilter] = useState('todos');
+  const [reminderDateFilter, setReminderDateFilter] = useState('mes');
+  const [reminderSelectedDate, setReminderSelectedDate] = useState(new Date());
 
   // Estados para módulo empresarial
   const [showBusinessModule, setShowBusinessModule] = useState(false);
@@ -95,8 +95,8 @@ export default function FinanceTracker() {
   const [businessClient, setBusinessClient] = useState('');
   const [businessInvoice, setBusinessInvoice] = useState('');
   const [businessStatus, setBusinessStatus] = useState('pendiente');
-  // const [businessDateFilter, setBusinessDateFilter] = useState('mes');
-  // const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
+  const [businessDateFilter, setBusinessDateFilter] = useState('mes');
+  const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
 
   // Estados para notificaciones
   const [notificationsEnabled, setNotificationsEnabled] = useState('default');
