@@ -81,9 +81,9 @@ export default function FinanceTracker() {
 
   const [showRemindersModule, setShowRemindersModule] = useState(false);
 
-  const [reminderFilter, setReminderFilter] = useState('todos');
-  const [reminderDateFilter, setReminderDateFilter] = useState('mes');
-  const [reminderSelectedDate, setReminderSelectedDate] = useState(new Date());
+  const [reminderFilter] = useState('todos');
+  const [reminderDateFilter] = useState('mes');
+  const [reminderSelectedDate] = useState(new Date());
 
   // Estados para módulo empresarial
   const [showBusinessModule, setShowBusinessModule] = useState(false);
@@ -95,13 +95,13 @@ export default function FinanceTracker() {
   const [businessClient, setBusinessClient] = useState('');
   const [businessInvoice, setBusinessInvoice] = useState('');
   const [businessStatus, setBusinessStatus] = useState('pendiente');
-  const [businessDateFilter, setBusinessDateFilter] = useState('mes');
-  const [businessSelectedDate, setBusinessSelectedDate] = useState(new Date());
+  const [businessDateFilter] = useState('mes');
+  const [businessSelectedDate] = useState(new Date());
 
   // Estados para notificaciones
   const [notificationsEnabled, setNotificationsEnabled] = useState('default');
   const [showNotificationConfig, setShowNotificationConfig] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState(null);
+  const [, setInstallPrompt] = useState(null);
 
   const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
 
@@ -173,6 +173,39 @@ export default function FinanceTracker() {
 
 
 
+  const handleUserChange = useCallback((user) => {
+    if (user) {
+      setCurrentUser(user);
+      setShowLogin(false);
+
+      if ('Notification' in window) {
+        setNotificationsEnabled(Notification.permission);
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+      });
+      const isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
+      const isBusinessAuthorized = user.email === BUSINESS_AUTHORIZED_EMAIL;
+
+      setShowSavingsModule(isAuthorized && !isBusinessAuthorized);
+      setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
+      setShowBusinessModule(isBusinessAuthorized || user.email === 'carlosdaniel092015@gmail.com');
+
+      if (isBusinessAuthorized) {
+        setActiveTab('empresa');
+      }
+    } else {
+      setCurrentUser(null);
+      setShowLogin(true);
+      setShowSavingsModule(false);
+      setShowRemindersModule(false);
+      setShowBusinessModule(false);
+    }
+    setLoading(false);
+  }, [AUTHORIZED_EMAILS, BUSINESS_AUTHORIZED_EMAIL]);
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -189,41 +222,6 @@ export default function FinanceTracker() {
 
     return () => subscription.unsubscribe();
   }, [handleUserChange]);
-
-  const handleUserChange = (user) => {
-    if (user) {
-      setCurrentUser(user);
-      setShowLogin(false);
-
-      // Verificar estado de notificaciones
-      if ('Notification' in window) {
-        setNotificationsEnabled(Notification.permission);
-      }
-
-      // Capturar evento de instalación PWA
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        setInstallPrompt(e);
-      });
-      const isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
-      const isBusinessAuthorized = user.email === BUSINESS_AUTHORIZED_EMAIL;
-
-      setShowSavingsModule(isAuthorized && !isBusinessAuthorized);
-      setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
-      setShowBusinessModule(isBusinessAuthorized || user.email === 'carlosdaniel092015@gmail.com'); // Allow main user to see business too
-
-      if (isBusinessAuthorized) {
-        setActiveTab('empresa');
-      }
-    } else {
-      setCurrentUser(null);
-      setShowLogin(true);
-      setShowSavingsModule(false);
-      setShowRemindersModule(false);
-      setShowBusinessModule(false);
-    }
-    setLoading(false);
-  };
 
 
 
@@ -625,7 +623,7 @@ export default function FinanceTracker() {
     return diffDays;
   };
 
-  const checkRemindersAndNotify = async (remindersList) => {
+  const checkRemindersAndNotify = useCallback(async (remindersList) => {
     if (!('Notification' in window)) return;
     if (Notification.permission !== 'granted') return;
 
@@ -661,7 +659,7 @@ export default function FinanceTracker() {
           .eq('id', reminder.id);
       }
     }
-  };
+  }, []);
 
 
 
