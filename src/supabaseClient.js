@@ -2,12 +2,24 @@ import { createClient } from '@supabase/supabase-js';
 
 // Use runtime config (window.ENV) if available, otherwise fall back to build-time env
 const getEnvVar = (key) => {
-  // Check runtime config first (production)
-  if (typeof window !== 'undefined' && window.ENV && window.ENV[key]) {
-    return window.ENV[key];
+  // Common prefixes to check: VITE_ (Standard), REACT_APP_ (Easypanel default)
+  const variants = [key, key.replace('VITE_', 'REACT_APP_')];
+
+  // 1. Check runtime config first (production)
+  if (typeof window !== 'undefined' && window.ENV) {
+    for (const variant of variants) {
+      if (window.ENV[variant]) return window.ENV[variant];
+    }
   }
-  // Fall back to build-time env (development)
-  return import.meta.env[key];
+
+  // 2. Fall back to build-time env (development)
+  if (import.meta.env) {
+    for (const variant of variants) {
+      if (import.meta.env[variant]) return import.meta.env[variant];
+    }
+  }
+
+  return '';
 };
 
 const supabaseUrl = getEnvVar('VITE_SUPABASE_URL')?.replace(/\/$/, '') || '';
@@ -15,10 +27,9 @@ const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_ID') || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Supabase configuration missing!');
-  console.error('Please check:');
-  console.error('1. Development: Ensure .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_ID');
-  console.error('2. Production: Ensure Docker container has environment variables set');
-  console.error('3. Check that /env-config.js is accessible and contains values');
+  console.warn('URL:', supabaseUrl ? 'Found' : 'Missing');
+  console.warn('Key:', supabaseAnonKey ? 'Found' : 'Missing');
+  console.info('Check if environment variables VITE_SUPABASE_URL/ID or REACT_APP_SUPABASE_URL/ID are set.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
