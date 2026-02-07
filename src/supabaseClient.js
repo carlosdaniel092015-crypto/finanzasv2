@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL ? process.env.REACT_APP_SUPABASE_URL.replace(/\/$/, '') : '';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_ID;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ? import.meta.env.VITE_SUPABASE_URL.replace(/\/$/, '') : '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_ID;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase URL or Anon Key is missing. Check your .env file.');
