@@ -22,7 +22,16 @@ RUN VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
 
 # Production stage
 FROM nginx:stable-alpine
+
+# Copy built files
 COPY --from=build-stage /app/build /usr/share/nginx/html
+
+# Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy and setup env config generation script
+COPY generate-env-config.sh /docker-entrypoint.d/01-generate-env.sh
+RUN chmod +x /docker-entrypoint.d/01-generate-env.sh
+
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
