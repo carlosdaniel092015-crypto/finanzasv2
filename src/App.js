@@ -15,8 +15,6 @@ ChartJS.register(
   PointElement, LineElement
 );
 
-
-
 // Mover constantes fuera del componente para evitar advertencias de dependencias en Hooks
 const AUTHORIZED_EMAILS = ['carlosdaniel092015@gmail.com', 'stephanymartinezjaquez30@gmail.com'];
 const REMINDERS_AUTHORIZED_EMAIL = 'carlosdaniel092015@gmail.com';
@@ -38,8 +36,6 @@ export default function FinanceTracker() {
 
   const [loading, setLoading] = useState(true);
 
-
-
   const [transactions, setTransactions] = useState([]);
 
   const [transactionType, setTransactionType] = useState('gasto');
@@ -56,8 +52,6 @@ export default function FinanceTracker() {
 
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-
-
   const [savings, setSavings] = useState([]);
 
   const [savingName, setSavingName] = useState('');
@@ -69,8 +63,6 @@ export default function FinanceTracker() {
   const [showSavingsModule, setShowSavingsModule] = useState(false);
 
   const [activeTab, setActiveTab] = useState('finanzas');
-
-
 
   const [reminders, setReminders] = useState([]);
 
@@ -127,8 +119,6 @@ export default function FinanceTracker() {
     localStorage.setItem('annualReturnRate', annualRate);
   }, [annualRate]);
 
-
-
   const [dynamicCategories, setDynamicCategories] = useState(() => {
     const saved = localStorage.getItem('app_categories_v2');
     if (saved) return JSON.parse(saved);
@@ -171,8 +161,6 @@ export default function FinanceTracker() {
   const [editingCategory, setEditingCategory] = useState(null); // { type, name }
   const [editCategoryInputValue, setEditCategoryInputValue] = useState('');
 
-
-
   const handleUserChange = useCallback((user) => {
     if (user) {
       setCurrentUser(user);
@@ -204,7 +192,7 @@ export default function FinanceTracker() {
       setShowBusinessModule(false);
     }
     setLoading(false);
-  }, [AUTHORIZED_EMAILS, BUSINESS_AUTHORIZED_EMAIL]);
+  }, []); // <--- CORREGIDO: Array de dependencias vacío para evitar advertencia de ESLint
 
   useEffect(() => {
     const checkUser = async () => {
@@ -223,8 +211,6 @@ export default function FinanceTracker() {
     return () => subscription.unsubscribe();
   }, [handleUserChange]);
 
-
-
   const fetchTransactions = useCallback(async () => {
     if (!currentUser) return;
     const { data, error } = await supabase
@@ -241,8 +227,6 @@ export default function FinanceTracker() {
     fetchTransactions();
   }, [fetchTransactions]);
 
-
-
   const fetchSavings = useCallback(async () => {
     if (!currentUser || !showSavingsModule) return;
     const { data, error } = await supabase
@@ -257,8 +241,6 @@ export default function FinanceTracker() {
   useEffect(() => {
     fetchSavings();
   }, [fetchSavings]);
-
-
 
   const getDaysUntilDue = (dueDate) => {
     if (!dueDate) return 0;
@@ -423,7 +405,6 @@ export default function FinanceTracker() {
   }, [currentUser, showRemindersModule, reminders, fetchTransactions]);
 
 
-
   const handleRegister = async () => {
     setLoginError('');
 
@@ -460,7 +441,6 @@ export default function FinanceTracker() {
   };
 
 
-
   const handleLogin = async () => {
     setLoginError('');
 
@@ -484,7 +464,6 @@ export default function FinanceTracker() {
   };
 
 
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -497,7 +476,6 @@ export default function FinanceTracker() {
       console.error('Error al cerrar sesión:', error);
     }
   };
-
 
 
   const addReminder = async () => {
@@ -571,7 +549,6 @@ export default function FinanceTracker() {
   };
 
 
-
   const deleteReminder = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar este recordatorio? También se eliminarán todas las transacciones generadas automáticamente por él.')) {
       return;
@@ -591,7 +568,6 @@ export default function FinanceTracker() {
       alert('Error al realizar la eliminación');
     }
   };
-
 
 
   const toggleReminderStatus = async (id, currentStatus, reminder) => {
@@ -622,84 +598,43 @@ export default function FinanceTracker() {
   };
 
 
-
   const handleReminderAmountInput = (value) => {
-
     const cleaned = value.replace(/[^\d.]/g, '');
-
     const parts = cleaned.split('.');
-
     if (parts.length > 2) {
-
       return;
-
     }
-
-
 
     let formatted = parts[0];
-
     if (formatted) {
-
       formatted = formatted.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
     }
-
-
 
     if (parts.length === 2) {
-
       formatted = formatted + '.' + parts[1].slice(0, 2);
-
     }
 
-
-
     setReminderAmount(formatted);
-
   };
 
 
-
-
-
-
   const filterReminders = () => {
-
     return reminders.filter(reminder => {
-
       if (reminderFilter === 'todos') return true;
-
-
-
       const daysUntil = getDaysUntilDue(reminder.dueDate);
 
-
-
       if (reminderFilter === 'pendientes') {
-
         return reminder.status === 'pendiente' && daysUntil > 7;
-
       } else if (reminderFilter === 'pronto') {
-
         return reminder.status === 'pendiente' && daysUntil >= 0 && daysUntil <= 7;
-
       } else if (reminderFilter === 'vencidos') {
-
         return reminder.status === 'pendiente' && daysUntil < 0;
-
       } else if (reminderFilter === 'pagados') {
-
         return reminder.status === 'pagado';
-
       }
 
-
-
       return true;
-
     });
-
   };
 
   const filterRemindersByDate = () => {
@@ -762,7 +697,6 @@ export default function FinanceTracker() {
   };
 
 
-
   const deleteTransaction = async (id, transaction) => {
     try {
       if (transaction.from_reminder && transaction.reminder_id) {
@@ -780,7 +714,6 @@ export default function FinanceTracker() {
       alert('Error al eliminar la transacción');
     }
   };
-
 
 
   const toggleStatus = async (id, currentStatus, transaction) => {
@@ -807,7 +740,6 @@ export default function FinanceTracker() {
       alert('Error al actualizar el estado');
     }
   };
-
 
 
   const addSaving = async () => {
@@ -851,7 +783,6 @@ export default function FinanceTracker() {
   };
 
 
-
   const deleteSaving = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar este ahorro?')) {
       return;
@@ -868,71 +799,39 @@ export default function FinanceTracker() {
   };
 
 
-
   const calculateCompoundInterest = () => {
-
     const sortedSavings = [...savings].sort((a, b) => new Date(a.date) - new Date(b.date));
-
     let history = [];
-
     let accumulated = 0;
-
     let totalInterest = 0;
 
-
-
     sortedSavings.forEach((saving) => {
-
       // Parse YYYY-MM-DD string to Local Midnight
       const [y, m, d] = saving.date.split('-').map(Number);
       const savingDate = new Date(y, m - 1, d);
-
       const today = new Date();
-
       const daysElapsed = Math.max(0, Math.floor((today - savingDate) / (1000 * 60 * 60 * 24)));
-
       const yearsElapsed = daysElapsed / 365;
 
-
-
       const dailyRate = Math.pow(1 + annualRate, 1 / 365) - 1;
-
       const amountWithInterest = saving.amount * Math.pow(1 + dailyRate, daysElapsed);
-
       const interestEarned = amountWithInterest - saving.amount;
 
-
-
       accumulated += amountWithInterest;
-
       totalInterest += interestEarned;
 
-
-
       history.push({
-
         ...saving,
-
         daysElapsed,
-
         yearsElapsed: yearsElapsed.toFixed(2),
-
         interestEarned,
-
         currentValue: amountWithInterest,
-
         accumulatedTotal: accumulated
-
       });
-
     });
 
-
-
     return { history, totalInterest, totalInvested: sortedSavings.reduce((sum, s) => sum + s.amount, 0), accumulated };
-
   };
-
 
 
   const urlBase64ToUint8Array = (base64String) => {
@@ -1137,8 +1036,6 @@ export default function FinanceTracker() {
 
     doc.save(`Reporte_Finanzas_${dateStr}.pdf`);
   };
-
-
 
   /*
   const handleAmountInput = (value) => {
@@ -1401,41 +1298,26 @@ export default function FinanceTracker() {
     });
   };
 
-
-
   const filteredTransactions = filterTransactionsByDate();
 
   const totalIngresos = filteredTransactions
-
     .filter(t => t.type === 'ingreso' && t.status === 'pagado')
-
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalGastos = filteredTransactions
-
     .filter(t => t.type === 'gasto' && t.status === 'pagado')
-
     .reduce((sum, t) => sum + t.amount, 0);
 
   const balance = totalIngresos - totalGastos;
 
 
-
   if (loading) {
-
     return (
-
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-
         <div className="text-white text-2xl">Cargando...</div>
-
       </div>
-
     );
-
   }
-
-
 
   if (showLogin) {
     return (
@@ -1570,7 +1452,6 @@ export default function FinanceTracker() {
       </div>
     );
   }
-
 
 
   return (
