@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@sentry/react": "^8.0.0", 
     "@supabase/supabase-js": "^2.47.0",
     "chart.js": "^4.5.1",
     "firebase": "^11.1.0",
