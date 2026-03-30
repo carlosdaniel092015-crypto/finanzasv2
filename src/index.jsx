@@ -1,4 +1,4 @@
-import "./instrument.js"; // ← única línea nueva agregada
+import "./instrument.js"; // ← debe ser la primera línea siempre
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -20,7 +20,8 @@ if ('serviceWorker' in navigator) {
       .catch(error => {
         console.error('❌ Falló el registro del SW:', error);
       });
-    // Escuchar cambios en el controlador para recargar la página automáticamente cuando se activa un nuevo SW
+
+    // Recargar la página automáticamente cuando se activa un nuevo SW
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!refreshing) {
