@@ -1,4 +1,3 @@
-throw new Error("Test Bugsink - funciona!");
 import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, Wallet, PiggyBank, Calendar, Layout, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, X, CheckCircle2, Lock, Mail, Briefcase, Tags } from 'lucide-react';
 import { supabase } from './supabaseClient';
