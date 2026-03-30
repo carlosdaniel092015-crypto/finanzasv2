@@ -1,3 +1,7 @@
+// Al inicio de App.jsx, solo para probar — ELIMINAR después
+useEffect(() => {
+  throw new Error("Test Bugsink - Conexión OK");
+}, []);
 import React, { useState, useEffect, useCallback } from 'react';
 import { PlusCircle, Trash2, TrendingUp, TrendingDown, DollarSign, LogOut, Wallet, PiggyBank, Calendar, Layout, Clock, Settings, Search, Bell, CreditCard, ChevronLeft, ChevronRight, Camera, FileText, X, CheckCircle2, Lock, Mail, Briefcase, Tags } from 'lucide-react';
 import { supabase } from './supabaseClient';
