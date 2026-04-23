@@ -161,9 +161,9 @@ export default function FinanceTracker() {
   const [editingCategory, setEditingCategory] = useState(null); // { type, name }
   const [editCategoryInputValue, setEditCategoryInputValue] = useState('');
 
-  const handleUserChange = useCallback(async (user) => {  // ← agregar async
+  const handleUserChange = useCallback(async (user) => {
     if (user) {
-      // Verificar app PRIMERO antes de cualquier otra cosa
+      // Verificar app primero
       const userApp = user.user_metadata?.app;
       if (userApp && userApp !== 'finanzas') {
         await supabase.auth.signOut();
