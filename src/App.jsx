@@ -444,9 +444,7 @@ if (userApp && userApp !== 'finanzas') {
   email: registerForm.email,
   password: registerForm.password,
   options: {
-    data: {
-      app: 'finanzas'
-    }
+    data: { app: 'finanzas' }
   }
 });
 
