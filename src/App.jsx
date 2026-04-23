@@ -161,11 +161,21 @@ export default function FinanceTracker() {
   const [editingCategory, setEditingCategory] = useState(null); // { type, name }
   const [editCategoryInputValue, setEditCategoryInputValue] = useState('');
 
-  const handleUserChange = useCallback((user) => {
+  const handleUserChange = useCallback(async (user) => {  // ← agregar async
     if (user) {
+      // Verificar app PRIMERO antes de cualquier otra cosa
+      const userApp = user.user_metadata?.app;
+      if (userApp && userApp !== 'finanzas') {
+        await supabase.auth.signOut();
+        setLoginError('No tienes acceso a esta aplicación');
+        setShowLogin(true);
+        setLoading(false);
+        return;
+      }
+
       setCurrentUser(user);
       setShowLogin(false);
-
+      
       if ('Notification' in window) {
         setNotificationsEnabled(Notification.permission);
       }
