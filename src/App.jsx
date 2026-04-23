@@ -176,7 +176,13 @@ export default function FinanceTracker() {
       });
       const isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
       const isBusinessAuthorized = user.email === BUSINESS_AUTHORIZED_EMAIL;
-
+      const userApp = user.user_metadata?.app;
+if (userApp && userApp !== 'finanzas') {
+  await supabase.auth.signOut();
+  setLoginError('No tienes acceso a esta aplicación');
+  setLoading(false);
+  return;
+}
       setShowSavingsModule(isAuthorized && !isBusinessAuthorized);
       setShowRemindersModule(user.email === REMINDERS_AUTHORIZED_EMAIL);
       setShowBusinessModule(isBusinessAuthorized || user.email === 'carlosdaniel092015@gmail.com');
@@ -433,18 +439,6 @@ export default function FinanceTracker() {
     }
   }
 });
-Cambio 2 — Al hacer login, bloquear usuarios de otras apps (en la función handleUserChange):
-javascript// Después de: const isAuthorized = AUTHORIZED_EMAILS.includes(user.email);
-// Agregar ANTES de setShowSavingsModule:
-
-const userApp = user.user_metadata?.app;
-if (userApp && userApp !== 'finanzas') {
-  await supabase.auth.signOut();
-  setLoginError('No tienes acceso a esta aplicación');
-  setLoading(false);
-  return;
-}
-¿Quieres que te ayude a hacer estos cambios directamente en el repositorio de GitHub, o prefieres hacerlos tú en tu editor de código?
 
       if (error) throw error;
 
